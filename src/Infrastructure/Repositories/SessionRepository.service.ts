@@ -1,11 +1,11 @@
-import { Inject, Injectable } from "@nestjs/common";
-import { Session } from "src/Core/Entities/Session/Session.entity";
-import { ISessionRepository } from "src/Core/RepositoriesInterface/ISessionRepository.interface";
-import { ConstantsMessagesSession } from "src/Helpers/ConstantsMessages/ConstantsMessages";
-import { List } from "src/Helpers/CustomObjects/List.Interface";
-import { Result } from "src/Helpers/CustomObjects/Result";
-import { Task } from "src/Helpers/CustomObjects/Task.Interface";
+import { Injectable, Inject } from "@nestjs/common";
 import { Repository } from "typeorm";
+import { ISessionRepository } from "../../Core/RepositoriesInterface/ISessionRepository.interface";
+import { ConstantsMessagesSession } from "../../Helpers/ConstantsMessages/ConstantsMessages";
+import { List } from "../../Helpers/CustomObjects/List.Interface";
+import { Result } from "../../Helpers/CustomObjects/Result";
+import { Task } from "../../Helpers/CustomObjects/Task.Interface";
+import { Session } from "../../Core/Entities/Session/Session.entity";
 
 @Injectable()
 export class SessionRepository extends ISessionRepository {

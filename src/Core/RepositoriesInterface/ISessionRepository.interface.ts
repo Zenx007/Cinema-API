@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
-import { List } from "src/Helpers/CustomObjects/List.Interface";
-import { Result } from "src/Helpers/CustomObjects/Result";
-import { Task } from "src/Helpers/CustomObjects/Task.Interface";
 import { Session } from "../Entities/Session/Session.entity";
+import { Task } from "../../Helpers/CustomObjects/Task.Interface";
+import { Result } from "../../Helpers/CustomObjects/Result";
+import { List } from "../../Helpers/CustomObjects/List.Interface";
 
 @Module({})
 export abstract class ISessionRepository {
