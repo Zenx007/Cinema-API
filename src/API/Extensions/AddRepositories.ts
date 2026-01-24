@@ -3,6 +3,8 @@ import { ISessionRepository } from "../../Core/RepositoriesInterface/ISessionRep
 import { SessionRepository } from "../../Infrastructure/Repositories/SessionRepository.service";
 import { IReservationRepository } from "../../Core/RepositoriesInterface/IReservationRepository.interface";
 import { ReservationRepository } from "../../Infrastructure/Repositories/ReservationRepository.service";
+import { ISeatRepository } from "../../Core/RepositoriesInterface/ISeatRepository.interface";
+import { SeatRepository } from "../../Infrastructure/Repositories/SeatRepository.service";
 
 const RepositoriesStartup: Provider[] = [];
 
@@ -15,6 +17,12 @@ RepositoriesStartup.push({
     provide: IReservationRepository,
     useClass: ReservationRepository
 });
+
+RepositoriesStartup.push({
+    provide: ISeatRepository,
+    useClass: SeatRepository
+});
+
 
 
 export default RepositoriesStartup;

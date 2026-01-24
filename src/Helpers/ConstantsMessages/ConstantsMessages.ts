@@ -36,3 +36,11 @@ export const ConstantsMessagesReservation = {
     SuccessUpdate: "Reserva atualizada com sucesso",
     SuccessDelete: "Reserva cancelada com sucesso"
 }
+
+export const ConstantsMessagesSeat = {
+    // Error Messages
+    ErrorUpdate: "Erro ao atualizar o status do assento",
+    ErrorFindById: "Erro ao buscar o assento pelo id",
+    ErrorFindAll: "Erro ao buscar a lista de assentos",
+    ErrorNotFound: "Erro, o assento não existe",
+}
