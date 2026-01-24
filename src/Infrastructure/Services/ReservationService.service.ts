@@ -21,6 +21,7 @@ export class ReservationService extends IReservationService {
 
     async CreateAsync(model: ReservationSaveVO): Task<Result<ReservationVO>> {
         try {
+
             const reservation = new Reservation();
             reservation.userId = model.userId;
             reservation.seatId = model.seatId;

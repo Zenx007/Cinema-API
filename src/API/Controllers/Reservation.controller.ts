@@ -1,30 +1,30 @@
 import { Controller, Get, Res, Req, Post, Body, Query } from "@nestjs/common";
 import { ApiTags, ApiOperation } from "@nestjs/swagger";
 import { Response } from "express";
-import { SessionVO, SessionSaveVO } from "../../Communication/ViewObjects/Session/SessionVO";
-import { ISessionService } from "../../Core/ServicesInterface/ISessionService.interface";
-import { ConstantsMessagesSession } from "../../Helpers/ConstantsMessages/ConstantsMessages";
+import { ReservationSaveVO, ReservationVO } from "../../Communication/ViewObjects/Reservation/ReservationVO";
+import { IReservationService } from "../../Core/ServicesInterface/IReservationService.interface";
+import { ConstantsMessagesReservation } from "../../Helpers/ConstantsMessages/ConstantsMessages";
 import { List } from "../../Helpers/CustomObjects/List.Interface";
 import { Result } from "../../Helpers/CustomObjects/Result";
 import { StatusCode, StatusCodes } from "../../Helpers/StatusCode/StatusCode";
 import { ApiResponse } from "../../Helpers/CustomObjects/ApiResponse.interface";
 
-@ApiTags('Sessions') 
-@Controller("Session")
-export class SessionController {
+@ApiTags('Reservations') 
+@Controller("Reservation")
+export class ReservationController {
     constructor(
-        private readonly _sessionService: ISessionService,
+        private readonly _reservationService: IReservationService,
     ) { }
 
-    @ApiOperation({ summary: 'Getall - Lista todas as sessões' })
+    @ApiOperation({ summary: 'Getall - Lista todas as reservas' })
     @Get('GetAll')
     async GetAllAsync(
         @Res() res: Response,
         @Req() req: Request) {
-        const response = new ApiResponse<List<SessionVO>>();
+        const response = new ApiResponse<List<ReservationVO>>();
         try {
 
-            const list = await this._sessionService.GetAll();
+            const list = await this._reservationService.GetAll();
             if (list.isFailed) {
                 response.success = false;
                 response.message = list.errors.toString();
@@ -40,7 +40,7 @@ export class SessionController {
         catch (error) {
 
             response.success = false;
-            response.message = ConstantsMessagesSession.ErrorGetAll;
+            response.message = ConstantsMessagesReservation.ErrorGetAll;
             return StatusCode(
                 res,
                 StatusCodes.STATUS_500_INTERNAL_SERVER_ERROR,
@@ -48,106 +48,106 @@ export class SessionController {
         }
     }
 
-    @ApiOperation({ summary: 'Create - Cria uma nova sessão' })
+    @ApiOperation({ summary: 'Create - Cria uma nova reserva' })
     @Post('Create')
     async CreateAsync(
         @Res() res: Response,
         @Req() req: Request,
-        @Body() model: SessionSaveVO,
+        @Body() model: ReservationSaveVO,
     ) {
-        const response = new ApiResponse<SessionVO>();
+        const response = new ApiResponse<ReservationVO>();
         try {
-            const result = await this._sessionService.CreateAsync(model);
+            const result = await this._reservationService.CreateAsync(model);
             if (result.isFailed) {
                 response.object = null,
-                    response.message = ConstantsMessagesSession.ErrorCreate,
-                    response.success = false;
+                response.message = ConstantsMessagesReservation.ErrorCreate,
+                response.success = false;
 
                 return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
             }
 
             response.object = result.value,
-                response.success = true;
+            response.success = true;
 
             return StatusCode(res, StatusCodes.STATUS_201_CREATED, response);
         }
         catch (error) {
 
             response.object = null,
-                response.message = ConstantsMessagesSession.ErrorCreate,
-                response.success = false;
-
-            return StatusCode(res, StatusCodes.STATUS_500_INTERNAL_SERVER_ERROR, response);
-        }
-    }
-
-    @ApiOperation({ summary: 'Prepare - Busca uma sessão por ID' })
-    @Get('Prepare')
-    async PrepareAsync(
-        @Res() res: Response,
-        @Req() req: Request,
-        @Query('id') id: string,
-    ) {
-        const response = new ApiResponse<SessionVO>();
-        try {
-            const result = await this._sessionService.GetById(id);
-
-            if (result.isFailed) {
-                response.object = null,
-                    response.message = ConstantsMessagesSession.ErrorPrepare;
-                response.success = false;
-
-                return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
-            }
-
-            response.object = result.value,
-                response.success = true;
-
-            return StatusCode(res, StatusCodes.STATUS_200_OK, response);
-        }
-        catch (error) {
-            response.message = ConstantsMessagesSession.ErrorPrepare,
-                response.object = null,
-                response.success = false;
-
-            return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
-        }
-    }
-
-    @ApiOperation({ summary: 'Update - Atualiza uma sessão' })
-    @Post('Update')
-    async UpdateAsync(
-        @Res() res: Response,
-        @Req() req: Request,
-        @Body() model: SessionVO,
-    ) {
-        const response = new ApiResponse<SessionVO>();
-        try {
-            const result = await this._sessionService.UpdateAsync(model);
-
-            if (result.isFailed) {
-                response.object = null,
-                    response.message = ConstantsMessagesSession.ErrorUpdate,
-                    response.success = false;
-
-                return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST)
-            }
-
-            response.object = result.value,
-                response.success = true;
-
-            return StatusCode(res, StatusCodes.STATUS_200_OK, response);
-        }
-        catch (error) {
-            response.object = null,
-                response.message = ConstantsMessagesSession.ErrorUpdate;
+            response.message = ConstantsMessagesReservation.ErrorCreate,
             response.success = false;
 
             return StatusCode(res, StatusCodes.STATUS_500_INTERNAL_SERVER_ERROR, response);
         }
     }
 
-    @ApiOperation({ summary: 'Delete - Deleta uma sessão' })
+    @ApiOperation({ summary: 'Prepare - Busca uma reserva por ID' })
+    @Get('Prepare')
+    async PrepareAsync(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Query('id') id: string,
+    ) {
+        const response = new ApiResponse<ReservationVO>();
+        try {
+            const result = await this._reservationService.GetById(id);
+
+            if (result.isFailed) {
+                response.object = null,
+                response.message = ConstantsMessagesReservation.ErrorPrepare;
+                response.success = false;
+
+                return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
+            }
+
+            response.object = result.value,
+            response.success = true;
+
+            return StatusCode(res, StatusCodes.STATUS_200_OK, response);
+        }
+        catch (error) {
+            response.message = ConstantsMessagesReservation.ErrorPrepare,
+            response.object = null,
+            response.success = false;
+
+            return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
+        }
+    }
+
+    @ApiOperation({ summary: 'Update - Atualiza status da reserva' })
+    @Post('Update')
+    async UpdateAsync(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Body() model: ReservationVO,
+    ) {
+        const response = new ApiResponse<ReservationVO>();
+        try {
+            const result = await this._reservationService.UpdateAsync(model);
+
+            if (result.isFailed) {
+                response.object = null,
+                response.message = ConstantsMessagesReservation.ErrorUpdate,
+                response.success = false;
+
+                return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST)
+            }
+
+            response.object = result.value,
+            response.success = true;
+
+            return StatusCode(res, StatusCodes.STATUS_200_OK, response);
+        }
+        catch (error) {
+            response.object = null,
+            response.message = ConstantsMessagesReservation.ErrorUpdate;
+            response.success = false;
+
+            return StatusCode(res, StatusCodes.STATUS_500_INTERNAL_SERVER_ERROR, response);
+        }
+    }
+
+    @ApiOperation({ summary: 'Delete - Cancela/Remove uma reserva' })
     @Get('Delete')
     async DeleteAsync(
         @Res() res: Response,
@@ -156,25 +156,25 @@ export class SessionController {
     ) {
         const response = new ApiResponse<Result>();
         try {
-            const result = await this._sessionService.DeleteAsync(id);
+            const result = await this._reservationService.DeleteAsync(id);
 
             if (result.isFailed) {
                 response.object = null,
-                    response.message = ConstantsMessagesSession.ErrorDelete;
+                response.message = ConstantsMessagesReservation.ErrorDelete;
                 response.success = false;
 
                 return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
             }
 
             response.object = result,
-                response.success = true;
+            response.success = true;
 
             return StatusCode(res, StatusCodes.STATUS_200_OK, response);
         }
         catch (error) {
-            response.message = ConstantsMessagesSession.ErrorDelete,
-                response.object = null,
-                response.success = false;
+            response.message = ConstantsMessagesReservation.ErrorDelete,
+            response.object = null,
+            response.success = false;
 
             return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
         }
