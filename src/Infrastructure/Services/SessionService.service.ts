@@ -12,7 +12,7 @@ import { Session } from "../../Core/Entities/Session/Session.entity";
 @Injectable()
 export class SessionService extends ISessionService {
     private readonly _sessionRepo: ISessionRepository;
-    
+
     constructor(
         private readonly sessionRepo: ISessionRepository,
     ) {
@@ -23,15 +23,15 @@ export class SessionService extends ISessionService {
     async CreateAsync(model: SessionSaveVO): Task<Result<SessionVO>> {
         try {
             const session = new Session();
-            session.movideo = model.movieId;
+            session.movieId = model.movieId;
             session.roomId = model.roomId;
             session.startTime = model.startTime;
             session.price = model.price;
 
             const seats: Seat[] = [];
-            const rows = ['A', 'B']; 
+            const rows = ['A', 'B'];
             for (const row of rows) {
-                for (let i = 1; i <= 10; i++) { 
+                for (let i = 1; i <= 10; i++) {
                     const seat = new Seat();
                     seat.row = row;
                     seat.number = i;
@@ -42,14 +42,14 @@ export class SessionService extends ISessionService {
             session.seats = seats;
 
             const savedResult = await this._sessionRepo.InsertAsync(session);
-            
+
             if (savedResult.isFailed || savedResult.value == null)
                 return Result.Fail(ConstantsMessagesSession.ErrorCreate);
 
             const createdSession = savedResult.value;
             const response = new SessionVO();
             response.id = createdSession.id;
-            response.movie = createdSession.movideo;
+            response.movie = createdSession.movieId;
             response.roomId = createdSession.roomId;
             response.startTime = createdSession.startTime;
             response.price = createdSession.price;
@@ -73,20 +73,20 @@ export class SessionService extends ISessionService {
 
             const sessionToUpdate = new Session();
             sessionToUpdate.id = model.id;
-            sessionToUpdate.movideo = model.movie;
+            sessionToUpdate.movieId = model.movie;
             sessionToUpdate.roomId = model.roomId;
             sessionToUpdate.startTime = model.startTime;
             sessionToUpdate.price = model.price;
 
             const updateResult = await this._sessionRepo.UpdateAsync(sessionToUpdate);
-            
+
             if (updateResult.isFailed || updateResult.value == null)
                 return Result.Fail(ConstantsMessagesSession.ErrorPut);
 
             const updatedSession = updateResult.value;
             const response = new SessionVO();
             response.id = updatedSession.id;
-            response.movie = updatedSession.movideo;
+            response.movie = updatedSession.movieId;
             response.roomId = updatedSession.roomId;
             response.startTime = updatedSession.startTime;
             response.price = updatedSession.price;
@@ -105,7 +105,7 @@ export class SessionService extends ISessionService {
                 return Result.Fail(ConstantsMessagesSession.ErrorNotFound);
 
             const response = await this._sessionRepo.DeleteAsync(id);
-            
+
             if (response.isFailed)
                 return Result.Fail(ConstantsMessagesSession.ErrorDelete);
 
@@ -119,14 +119,14 @@ export class SessionService extends ISessionService {
     async GetById(id: string): Task<Result<SessionVO>> {
         try {
             if (!id) return Result.Fail(ConstantsMessagesSession.ErrorNotFound);
-                
+
             const session = await this._sessionRepo.FindByIdAsync(id);
             if (session == null)
                 return Result.Fail(ConstantsMessagesSession.ErrorNotFound);
 
             const response = new SessionVO();
             response.id = session.id;
-            response.movie = session.movideo;
+            response.movie = session.movieId;
             response.roomId = session.roomId;
             response.startTime = session.startTime;
             response.price = session.price;
@@ -147,7 +147,7 @@ export class SessionService extends ISessionService {
             const responseList: SessionVO[] = list.map(session => {
                 const vo = new SessionVO();
                 vo.id = session.id;
-                vo.movie = session.movideo;
+                vo.movie = session.movieId;
                 vo.roomId = session.roomId;
                 vo.startTime = session.startTime;
                 vo.price = session.price;
@@ -156,7 +156,7 @@ export class SessionService extends ISessionService {
 
             return Result.Ok(responseList);
         }
-        catch(error) {
+        catch (error) {
             return Result.Fail(ConstantsMessagesSession.ErrorGetAll);
         }
     }

@@ -7,7 +7,7 @@ export class Session {
     id: string;
 
     @Column()
-    movideo: string;
+    movieId: string;
 
     @Column()
     roomId: string;

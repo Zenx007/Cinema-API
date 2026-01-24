@@ -1,13 +1,13 @@
-import { Inject } from "@nestjs/common";
+import { Inject, InjectionToken } from "@nestjs/common";
 import { DataSource, Repository } from "typeorm";
 import { reservationProvider } from "../../Core/Entities/Reservation/Reservation.provider";
 import { seatProvider } from "../../Core/Entities/Seat/Seat.provider";
 import { sessionProvider } from "../../Core/Entities/Session/session.provider";
 
 type Provider = {
-    provide: string;
+    provide: InjectionToken;
     useFactory: (datasource: DataSource) => Repository<any>;
-    inject: string[];
+    inject: InjectionToken[];
 };
 
 const AddProviders: Provider[] = [];

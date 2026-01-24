@@ -37,7 +37,7 @@ export class SessionRepository extends ISessionRepository {
             if (session == null)
                 return Result.Fail(ConstantsMessagesSession.ErrorFindById);
 
-            session.movideo = model.movideo;
+            session.movieId = model.movieId;
             session.roomId = model.roomId;
             session.startTime = model.startTime;
             session.price = model.price;
