@@ -1,0 +1,13 @@
+import { Task } from "../../Helpers/CustomObjects/Task.Interface";
+import { Reservation } from "../../Core/Entities/Reservation/Reservation.entity"; 
+import { Result } from "../../Helpers/CustomObjects/Result";
+import { List } from "../../Helpers/CustomObjects/List.Interface";
+import { Module } from "@nestjs/common";
+@Module({})
+export abstract class IReservationRepository {
+    abstract InsertAsync (model: Reservation): Task<Result<Reservation>>;
+    abstract UpdateAsync (model: Reservation): Task<Result<Reservation>>;
+    abstract DeleteAsync (id: string): Task<Result>; 
+    abstract FindByIdAsync (id: string): Task<Reservation | null>;
+    abstract FindAllAsync (): Task<List<Reservation> | null>;
+}
