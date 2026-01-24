@@ -3,6 +3,8 @@ import { ISessionService } from "../../Core/ServicesInterface/ISessionService.in
 import { SessionService } from "../../Infrastructure/Services/SessionService.service";
 import { IReservationService } from "../../Core/ServicesInterface/IReservationService.interface";
 import { ReservationService } from "../../Infrastructure/Services/ReservationService.service";
+import { ISeatService } from "../../Core/ServicesInterface/ISeatService.interface";
+import { SeatService } from "../../Infrastructure/Services/SeatService.service";
 
 const ServicesStartup: Provider[] = [];
 
@@ -18,6 +20,11 @@ ServicesStartup.push({
 ServicesStartup.push({
     provide: IReservationService,
     useClass: ReservationService,
+});
+
+ServicesStartup.push({
+    provide: ISeatService,
+    useClass: SeatService,
 });
 
 
