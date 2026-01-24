@@ -1,4 +1,4 @@
-import { Controller, Get, Res, Req, Post, Body, Query } from "@nestjs/common";
+import { Controller, Get, Res, Req, Post, Body, Query, Put, Delete } from "@nestjs/common";
 import { ApiTags, ApiOperation } from "@nestjs/swagger";
 import { Response } from "express";
 import { SessionVO, SessionSaveVO } from "../../Communication/ViewObjects/Session/SessionVO";
@@ -115,7 +115,7 @@ export class SessionController {
     }
 
     @ApiOperation({ summary: 'Update - Atualiza uma sessão' })
-    @Post('Update')
+    @Put('Update')
     async UpdateAsync(
         @Res() res: Response,
         @Req() req: Request,
@@ -148,7 +148,7 @@ export class SessionController {
     }
 
     @ApiOperation({ summary: 'Delete - Deleta uma sessão' })
-    @Get('Delete')
+    @Delete('Delete')
     async DeleteAsync(
         @Res() res: Response,
         @Req() req: Request,

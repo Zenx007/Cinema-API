@@ -1,4 +1,4 @@
-import { Controller, Get, Res, Req, Post, Body, Query } from "@nestjs/common";
+import { Controller, Get, Res, Req, Post, Body, Query, Put, Delete } from "@nestjs/common";
 import { ApiTags, ApiOperation } from "@nestjs/swagger";
 import { Response } from "express";
 import { ReservationSaveVO, ReservationVO } from "../../Communication/ViewObjects/Reservation/ReservationVO";
@@ -115,7 +115,7 @@ export class ReservationController {
     }
 
     @ApiOperation({ summary: 'Update - Atualiza status da reserva' })
-    @Post('Update')
+    @Put('Update')
     async UpdateAsync(
         @Res() res: Response,
         @Req() req: Request,
@@ -148,7 +148,7 @@ export class ReservationController {
     }
 
     @ApiOperation({ summary: 'Delete - Cancela/Remove uma reserva' })
-    @Get('Delete')
+    @Delete('Delete')
     async DeleteAsync(
         @Res() res: Response,
         @Req() req: Request,

@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { IsNotEmpty, IsString } from "class-validator";
 
 export class ReservationVO {
     @ApiProperty()
@@ -18,9 +19,11 @@ export class ReservationVO {
 }
 
 export class ReservationSaveVO {
-    @ApiProperty()
+    @ApiProperty({ required: true })
+    @IsNotEmpty({ message: 'O usuário é obrigatório' })
     userId: string;
 
-    @ApiProperty()
+    @ApiProperty({ required: true })
+    @IsNotEmpty({ message: 'O assento é obrigatório' })
     seatId: string;
 }

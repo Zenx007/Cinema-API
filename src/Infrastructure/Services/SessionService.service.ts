@@ -22,22 +22,29 @@ export class SessionService extends ISessionService {
 
     async CreateAsync(model: SessionSaveVO): Task<Result<SessionVO>> {
         try {
+
+            if (model.numberOfSeats < 16)
+                return Result.Fail(ConstantsMessagesSession.ErrorMinSeats)
+
             const session = new Session();
-            session.movieId = model.movieId;
-            session.roomId = model.roomId;
-            session.startTime = model.startTime;
+            session.movie = model.movie;
+            session.room = model.room;
             session.price = model.price;
 
-            const seats: Seat[] = [];
-            const rows = ['A', 'B'];
-            for (const row of rows) {
-                for (let i = 1; i <= 10; i++) {
-                    const seat = new Seat();
-                    seat.row = row;
-                    seat.number = i;
-                    seat.status = SeatStatus.AVAILABLE;
-                    seats.push(seat);
-                }
+           const seats: Seat[] = [];
+            const seatsPerRow = 10; 
+            
+            for (let i = 0; i < model.numberOfSeats; i++) {
+                const seat = new Seat();
+                const rowIndex = Math.floor(i / seatsPerRow);
+                const rowLetter = String.fromCharCode(65 + rowIndex);
+                const seatNumber = (i % seatsPerRow) + 1;
+
+                seat.row = rowLetter;
+                seat.number = seatNumber;
+                seat.status = SeatStatus.AVAILABLE;
+                
+                seats.push(seat);
             }
             session.seats = seats;
 
@@ -49,9 +56,8 @@ export class SessionService extends ISessionService {
             const createdSession = savedResult.value;
             const response = new SessionVO();
             response.id = createdSession.id;
-            response.movie = createdSession.movieId;
-            response.roomId = createdSession.roomId;
-            response.startTime = createdSession.startTime;
+            response.movie = createdSession.movie;
+            response.roomId = createdSession.room;
             response.price = createdSession.price;
 
             return Result.Ok(response);
@@ -73,9 +79,8 @@ export class SessionService extends ISessionService {
 
             const sessionToUpdate = new Session();
             sessionToUpdate.id = model.id;
-            sessionToUpdate.movieId = model.movie;
-            sessionToUpdate.roomId = model.roomId;
-            sessionToUpdate.startTime = model.startTime;
+            sessionToUpdate.movie = model.movie;
+            sessionToUpdate.room = model.roomId;
             sessionToUpdate.price = model.price;
 
             const updateResult = await this._sessionRepo.UpdateAsync(sessionToUpdate);
@@ -86,9 +91,8 @@ export class SessionService extends ISessionService {
             const updatedSession = updateResult.value;
             const response = new SessionVO();
             response.id = updatedSession.id;
-            response.movie = updatedSession.movieId;
-            response.roomId = updatedSession.roomId;
-            response.startTime = updatedSession.startTime;
+            response.movie = updatedSession.movie;
+            response.roomId = updatedSession.room;
             response.price = updatedSession.price;
 
             return Result.Ok(response);
@@ -126,9 +130,8 @@ export class SessionService extends ISessionService {
 
             const response = new SessionVO();
             response.id = session.id;
-            response.movie = session.movieId;
-            response.roomId = session.roomId;
-            response.startTime = session.startTime;
+            response.movie = session.movie;
+            response.roomId = session.room;
             response.price = session.price;
 
             return Result.Ok(response);
@@ -147,9 +150,8 @@ export class SessionService extends ISessionService {
             const responseList: SessionVO[] = list.map(session => {
                 const vo = new SessionVO();
                 vo.id = session.id;
-                vo.movie = session.movieId;
-                vo.roomId = session.roomId;
-                vo.startTime = session.startTime;
+                vo.movie = session.movie;
+                vo.roomId = session.room;
                 vo.price = session.price;
                 return vo;
             });

@@ -11,6 +11,7 @@ export const ConstantsMessagesSession = {
     ErrorPrepare: "Erro ao preparar a sessão",
     ErrorGetAll: "Erro ao buscar a lista de sessões",
     ErrorNotFound: "Erro, a sessão não existe",
+    ErrorMinSeats: "Erro: A sessão deve ter no mínimo 16 assentos.",
 
     // Success Messages
     SuccessCreate: "Sessão criada com sucesso",
@@ -30,6 +31,8 @@ export const ConstantsMessagesReservation = {
     ErrorPrepare: "Erro ao preparar os dados da reserva",
     ErrorGetAll: "Erro ao obter a lista de reservas",
     ErrorNotFound: "Erro, a reserva não foi encontrada",
+    ErrorSeatNotAvailable: "Erro, o assento não está disponível",
+    ErrorReservationExist: "Erro, já existe uma reserva para este assento",
 
     // Success Messages
     SuccessCreate: "Reserva criada com sucesso",

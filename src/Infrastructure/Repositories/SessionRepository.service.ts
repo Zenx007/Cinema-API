@@ -37,9 +37,8 @@ export class SessionRepository extends ISessionRepository {
             if (session == null)
                 return Result.Fail(ConstantsMessagesSession.ErrorFindById);
 
-            session.movieId = model.movieId;
-            session.roomId = model.roomId;
-            session.startTime = model.startTime;
+            session.movie = model.movie;
+            session.room = model.room;
             session.price = model.price;
 
             const saved = await this._sessionDbContext.save(session);

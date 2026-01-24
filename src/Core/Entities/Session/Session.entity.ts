@@ -7,13 +7,10 @@ export class Session {
     id: string;
 
     @Column()
-    movieId: string;
+    movie: string;
 
     @Column()
-    roomId: string;
-
-    @Column()
-    startTime: Date;
+    room: string;
 
     @Column('decimal', { precision: 10, scale: 2 })
     price: number;
