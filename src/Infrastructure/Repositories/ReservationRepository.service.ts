@@ -1,5 +1,5 @@
 import { Injectable, Inject } from "@nestjs/common";
-import { Repository } from "typeorm";
+import { MoreThan, Repository } from "typeorm";
 import { IReservationRepository } from "../../Core/RepositoriesInterface/IReservationRepository.interface";
 import { ConstantsMessagesReservation } from "../../Helpers/ConstantsMessages/ConstantsMessages";
 import { List } from "../../Helpers/CustomObjects/List.Interface";
@@ -66,7 +66,7 @@ export class ReservationRepository extends IReservationRepository {
         try {
             const reservation: Reservation | null = await this._reservationDbContext.findOne({
                 where: { id: id },
-                relations: ['seat'] 
+                relations: ['seat']
             });
 
             return reservation ?? null;
@@ -85,6 +85,22 @@ export class ReservationRepository extends IReservationRepository {
             return list;
         }
         catch {
+            return null;
+        }
+    }
+
+    async FindBySeatAsync(id: string): Task<Reservation | null> {
+        try {
+            const reservation: Reservation | null = await this._reservationDbContext.findOne({
+                where: {
+                    seatId: id,
+                    expiresAt: MoreThan(new Date())
+                },
+                relations: ['seat']
+            });
+            return reservation ?? null;
+        }
+        catch (error) {
             return null;
         }
     }

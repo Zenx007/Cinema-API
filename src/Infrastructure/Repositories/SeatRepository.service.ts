@@ -37,7 +37,8 @@ export class SeatRepository extends ISeatRepository {
     async FindByIdAsync(id: string): Task<Seat | null> {
         try {
             const seat = await this._seatDbContext.findOne({
-                where: { id: id }
+                where: { id: id },
+                relations: ['session']
             });
             return seat ?? null;
         } catch (error) {

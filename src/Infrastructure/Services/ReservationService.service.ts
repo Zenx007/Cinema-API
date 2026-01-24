@@ -3,28 +3,44 @@ import { ReservationSaveVO, ReservationVO } from "../../Communication/ViewObject
 import { Reservation, ReservationStatus } from "../../Core/Entities/Reservation/Reservation.entity";
 import { IReservationRepository } from "../../Core/RepositoriesInterface/IReservationRepository.interface";
 import { IReservationService } from "../../Core/ServicesInterface/IReservationService.interface";
-import { ConstantsMessagesReservation } from "../../Helpers/ConstantsMessages/ConstantsMessages";
+import { ConstantsMessagesReservation, ConstantsMessagesSeat } from "../../Helpers/ConstantsMessages/ConstantsMessages";
 import { List } from "../../Helpers/CustomObjects/List.Interface";
 import { Result } from "../../Helpers/CustomObjects/Result";
 import { Task } from "../../Helpers/CustomObjects/Task.Interface";
+import { ISeatRepository } from "../../Core/RepositoriesInterface/ISeatRepository.interface";
 
 @Injectable()
 export class ReservationService extends IReservationService {
     private readonly _reservationRepo: IReservationRepository;
+    private readonly _seatRepo: ISeatRepository
 
     constructor(
         private readonly reservationRepo: IReservationRepository,
+        private readonly seatRepo: ISeatRepository,
     ) {
         super();
         this._reservationRepo = this.reservationRepo;
+        this._seatRepo = this.seatRepo;
     }
 
     async CreateAsync(model: ReservationSaveVO): Task<Result<ReservationVO>> {
         try {
+            
+            const seat = await this._seatRepo.FindByIdAsync(model.seatId);
+            if (seat == null) 
+                return Result.Fail(ConstantsMessagesSeat.ErrorNotFound);
+
+            if(seat.status !== 'AVAILABLE')
+                return Result.Fail(ConstantsMessagesReservation.ErrorSeatNotAvailable);
+
+            const reservationVerify = await this._reservationRepo.FindBySeatAsync(model.seatId);
+            if(reservationVerify != null)
+                return Result.Fail(ConstantsMessagesReservation.ErrorReservationExist);
 
             const reservation = new Reservation();
             reservation.userId = model.userId;
             reservation.seatId = model.seatId;
+            reservation.paidPrice = seat.session.price;
             reservation.status = ReservationStatus.PENDING;
             reservation.expiresAt = new Date(Date.now() + 30 * 1000); 
 
