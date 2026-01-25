@@ -6,6 +6,7 @@ import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import { join } from 'path';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { LoggingInterceptor } from './Helpers/Interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -29,6 +30,7 @@ async function bootstrap() {
 
   app.use(bodyParser.json({ limit: '2gb' })); 
   app.use(bodyParser.urlencoded({ limit: '2gb', extended: true }));
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
