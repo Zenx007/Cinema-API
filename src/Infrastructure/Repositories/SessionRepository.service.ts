@@ -10,11 +10,11 @@ import { Session } from "../../Core/Entities/Session/Session.entity";
 @Injectable()
 export class SessionRepository extends ISessionRepository {
     private readonly _sessionDbContext: Repository<Session>;
+    private readonly logger = new Logger(SessionRepository.name);
 
     constructor(
         @Inject('SESSION_REPOSITORY')
         private readonly sessionDbContext: Repository<Session>,
-        private readonly logger = new Logger(SessionRepository.name),
     ) {
         super();
         this._sessionDbContext = this.sessionDbContext;

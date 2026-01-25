@@ -19,6 +19,6 @@ export const MigrationDataSource = new DataSource({
   database: getEnv('DB_NAME'),
   entities: [...EntitiesConfigurations],
   migrations: ['src/Infrastructure/Migrations/*.ts'],
-  synchronize: false,
+  synchronize: true,
   migrationsTableName: '__nest_migrations',
 });

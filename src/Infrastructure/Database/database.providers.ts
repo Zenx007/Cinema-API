@@ -1,13 +1,13 @@
 import { DataSource } from 'typeorm';
 import { EntitiesConfigurations } from './entities';
-import { CONFIGURATION } from '../../../app.configuration';
 import { config as dotenvConfig } from 'dotenv';
+import { CONFIGURATION } from '../../app.configuration';
 
 dotenvConfig({ path: '.env' });
 
 export const databaseProviders = [
   {
-    provide: DataSource, 
+    provide: DataSource,
     useFactory: async () => {
       console.log('Iniciando o DataSource...');
 
@@ -20,7 +20,7 @@ export const databaseProviders = [
         database: CONFIGURATION.DATABASE,
         entities: EntitiesConfigurations,
         migrations: ['dist/Infrastructure/Migrations/*{.js}'],
-        synchronize: false,
+        synchronize: true,
       });
 
       await dataSource.initialize();

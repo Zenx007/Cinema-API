@@ -1,11 +1,11 @@
 import { DataSource } from "typeorm";
 import { EntitiesConfigurations } from "./entities";
-import { CONFIGURATION } from "../../../app.configuration";
+import { CONFIGURATION } from "../../app.configuration";
 
 
 export const Db_DataSource = new DataSource({
     type: 'postgres',
-    host: CONFIGURATION.HOST,
+    host: CONFIGURATION.HOST ,
     port: CONFIGURATION.PORT,
     username: CONFIGURATION.USERNAME,
     password: CONFIGURATION.PASSWORD,
