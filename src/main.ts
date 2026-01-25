@@ -5,6 +5,7 @@ import { SwaggerModule } from '@nestjs/swagger/dist/swagger-module';
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
 import { join } from 'path';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -28,6 +29,8 @@ async function bootstrap() {
 
   app.use(bodyParser.json({ limit: '2gb' })); 
   app.use(bodyParser.urlencoded({ limit: '2gb', extended: true }));
+
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
   const config = new DocumentBuilder()
     .setTitle('Cinema API')

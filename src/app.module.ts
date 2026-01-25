@@ -6,9 +6,11 @@ import AddProviders from './API/Extensions/AddProviders';
 import RepositoriesStartup from './API/Extensions/AddRepositories';
 import ServicesStartup, { AllServicesInjects } from './API/Extensions/AddService';
 import { DatabaseModule } from './Infrastructure/Database/database.module';
+import { WinstonModule } from 'nest-winston';
+import { winstonConfig } from './Helpers/Logger/winston.config';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, WinstonModule.forRoot(winstonConfig)],
   controllers: [...AddControllers],
   providers: [
     AppService,
