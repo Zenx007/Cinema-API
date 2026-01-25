@@ -1,4 +1,4 @@
-import { Injectable, Inject } from "@nestjs/common";
+import { Injectable, Inject, Logger } from "@nestjs/common";
 import { MoreThan, Repository } from "typeorm";
 import { IReservationRepository } from "../../Core/RepositoriesInterface/IReservationRepository.interface";
 import { ConstantsMessagesReservation } from "../../Helpers/ConstantsMessages/ConstantsMessages";
@@ -10,6 +10,7 @@ import { Reservation } from "../../Core/Entities/Reservation/Reservation.entity"
 @Injectable()
 export class ReservationRepository extends IReservationRepository {
     private readonly _reservationDbContext: Repository<Reservation>;
+    private readonly logger = new Logger(ReservationRepository.name);
 
     constructor(
         @Inject('RESERVATION_REPOSITORY')
@@ -21,11 +22,14 @@ export class ReservationRepository extends IReservationRepository {
 
     async InsertAsync(model: Reservation): Task<Result<Reservation>> {
         try {
+            this.logger.debug(`Inserindo nova reserva no banco. SeatId: ${model.seatId}, UserId: ${model.userId}`);
+
             const result = await this._reservationDbContext.save(model);
 
             return Result.Ok(result);
         }
         catch (error) {
+            this.logger.error(`Erro ao persistir reserva no banco: ${error.message}`, error.stack);
             return Result.Fail(ConstantsMessagesReservation.ErrorInsert);
         }
     }
@@ -38,11 +42,14 @@ export class ReservationRepository extends IReservationRepository {
 
             reservation.status = model.status;
 
+            this.logger.debug(`Atualizando reserva ${model.id} para status: ${model.status}`);
+
             const saved = await this._reservationDbContext.save(reservation);
 
             return Result.Ok(saved);
         }
         catch (error) {
+            this.logger.error(`Erro ao atualizar reserva ${model.id}: ${error.message}`, error.stack);
             return Result.Fail(ConstantsMessagesReservation.ErrorUpdate);
         }
     }
@@ -55,9 +62,12 @@ export class ReservationRepository extends IReservationRepository {
 
             await this._reservationDbContext.delete(id);
 
+            this.logger.log(`Reserva ${id} foi deletada do banco.`);
+
             return Result.Ok();
         }
         catch (error) {
+            this.logger.error(`Erro ao deletar reserva ${id}: ${error.message}`, error.stack);
             return Result.Fail(ConstantsMessagesReservation.ErrorDelete);
         }
     }
@@ -68,10 +78,10 @@ export class ReservationRepository extends IReservationRepository {
                 where: { id: id },
                 relations: ['seat']
             });
-
             return reservation ?? null;
         }
         catch (error) {
+            this.logger.error(`Erro na query FindByIdAsync (${id}): ${error.message}`, error.stack);
             return null;
         }
     }
@@ -81,10 +91,10 @@ export class ReservationRepository extends IReservationRepository {
             const list: List<Reservation> = await this._reservationDbContext.find({
                 relations: ['seat']
             });
-
             return list;
         }
-        catch {
+        catch (error) {
+            this.logger.error(`Erro na query FindAllAsync: ${error.message}`, error.stack);
             return null;
         }
     }
@@ -101,6 +111,7 @@ export class ReservationRepository extends IReservationRepository {
             return reservation ?? null;
         }
         catch (error) {
+            this.logger.error(`Erro na query FindBySeatAsync (${id}): ${error.message}`, error.stack);
             return null;
         }
     }

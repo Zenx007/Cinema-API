@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ReservationSaveVO, ReservationVO } from "../../Communication/ViewObjects/Reservation/ReservationVO";
 import { Reservation, ReservationStatus } from "../../Core/Entities/Reservation/Reservation.entity";
 import { IReservationRepository } from "../../Core/RepositoriesInterface/IReservationRepository.interface";
@@ -12,7 +12,9 @@ import { ISeatRepository } from "../../Core/RepositoriesInterface/ISeatRepositor
 @Injectable()
 export class ReservationService extends IReservationService {
     private readonly _reservationRepo: IReservationRepository;
-    private readonly _seatRepo: ISeatRepository
+    private readonly _seatRepo: ISeatRepository;
+    
+    private readonly logger = new Logger(ReservationService.name);
 
     constructor(
         private readonly reservationRepo: IReservationRepository,
@@ -24,33 +26,43 @@ export class ReservationService extends IReservationService {
     }
 
     async CreateAsync(model: ReservationSaveVO): Task<Result<ReservationVO>> {
+        this.logger.debug(`Iniciando reserva. User: ${model.userId}, Seat: ${model.seatId}`);
         try {
-            
             const seat = await this._seatRepo.FindByIdAsync(model.seatId);
-            if (seat == null) 
+            if (seat == null) {
+                this.logger.warn(`Tentativa de reserva em assento inexistente: ${model.seatId}`);
                 return Result.Fail(ConstantsMessagesSeat.ErrorNotFound);
+            }
 
-            if(seat.status !== 'AVAILABLE')
+            if(seat.status !== 'AVAILABLE') {
+                this.logger.warn(`Assento ${model.seatId} indisponível. Status atual: ${seat.status}`);
                 return Result.Fail(ConstantsMessagesReservation.ErrorSeatNotAvailable);
+            }
 
             const reservationVerify = await this._reservationRepo.FindBySeatAsync(model.seatId);
-            if(reservationVerify != null)
+            if(reservationVerify != null) {
+                this.logger.warn(`Já existe uma reserva ativa para o assento ${model.seatId}`);
                 return Result.Fail(ConstantsMessagesReservation.ErrorReservationExist);
+            }
 
             const reservation = new Reservation();
             reservation.userId = model.userId;
             reservation.seatId = model.seatId;
-            reservation.paidPrice = seat.session.price;
+            reservation.paidPrice = seat.session.price; 
             reservation.status = ReservationStatus.PENDING;
             reservation.expiresAt = new Date(Date.now() + 30 * 1000); 
 
             const savedResult = await this._reservationRepo.InsertAsync(reservation);
 
-            if (savedResult.isFailed || savedResult.value == null)
+            if (savedResult.isFailed || savedResult.value == null) {
+                this.logger.error(`Falha ao persistir reserva para o assento ${model.seatId}`);
                 return Result.Fail(ConstantsMessagesReservation.ErrorCreate);
+            }
 
             const createdReservation = savedResult.value;
             
+            this.logger.log(`Reserva ${createdReservation.id} criada com sucesso.`);
+
             const response = new ReservationVO();
             response.id = createdReservation.id;
             response.userId = createdReservation.userId;
@@ -61,17 +73,20 @@ export class ReservationService extends IReservationService {
             return Result.Ok(response);
         }
         catch (error) {
+            this.logger.error(`Erro fatal ao criar reserva: ${error.message}`, error.stack);
             return Result.Fail(ConstantsMessagesReservation.ErrorCreate);
         }
     }
 
     async UpdateAsync(model: ReservationVO): Task<Result<ReservationVO>> {
         try {
-            if (!model.id)
-                return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
+            if (!model.id) return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
+
+            this.logger.debug(`Atualizando reserva ${model.id} para status ${model.status}`);
 
             const existingReservation = await this._reservationRepo.FindByIdAsync(model.id);
             if (existingReservation == null) {
+                this.logger.warn(`Reserva ${model.id} não encontrada para atualização.`);
                 return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
             }
 
@@ -86,6 +101,8 @@ export class ReservationService extends IReservationService {
 
             const updatedReservation = updateResult.value;
             
+            this.logger.log(`Status da reserva ${model.id} alterado para ${updatedReservation.status}`);
+
             const response = new ReservationVO();
             response.id = updatedReservation.id;
             response.userId = updatedReservation.userId;
@@ -96,6 +113,7 @@ export class ReservationService extends IReservationService {
             return Result.Ok(response);
         }
         catch (error) {
+            this.logger.error(`Erro ao atualizar reserva ${model.id}: ${error.message}`, error.stack);
             return Result.Fail(ConstantsMessagesReservation.ErrorPut);
         }
     }
@@ -103,17 +121,22 @@ export class ReservationService extends IReservationService {
     async DeleteAsync(id: string): Task<Result> {
         try {
             const reservationDelete = await this._reservationRepo.FindByIdAsync(id);
-            if (reservationDelete == null)
+            if (reservationDelete == null) {
+                this.logger.warn(`Tentativa de deletar reserva inexistente: ${id}`);
                 return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
+            }
 
             const response = await this._reservationRepo.DeleteAsync(id);
 
             if (response.isFailed)
                 return Result.Fail(ConstantsMessagesReservation.ErrorDelete);
+            
+            this.logger.log(`Reserva ${id} removida com sucesso.`);
 
             return Result.Ok();
         }
         catch (error) {
+            this.logger.error(`Erro ao deletar reserva ${id}: ${error.message}`, error.stack);
             return Result.Fail(ConstantsMessagesReservation.ErrorDelete);
         }
     }
@@ -123,8 +146,7 @@ export class ReservationService extends IReservationService {
             if (!id) return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
 
             const reservation = await this._reservationRepo.FindByIdAsync(id);
-            if (reservation == null)
-                return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
+            if (reservation == null) return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
 
             const response = new ReservationVO();
             response.id = reservation.id;
@@ -136,6 +158,7 @@ export class ReservationService extends IReservationService {
             return Result.Ok(response);
         }
         catch (error) {
+            this.logger.error(`Erro ao buscar reserva ${id}: ${error.message}`, error.stack);
             return Result.Fail(ConstantsMessagesReservation.ErrorPrepare);
         }
     }
@@ -143,8 +166,7 @@ export class ReservationService extends IReservationService {
     async GetAll(): Task<Result<List<ReservationVO>>> {
         try {
             const list = await this._reservationRepo.FindAllAsync();
-            if (list == null)
-                return Result.Fail(ConstantsMessagesReservation.ErrorGetAll);
+            if (list == null) return Result.Fail(ConstantsMessagesReservation.ErrorGetAll);
 
             const responseList: ReservationVO[] = list.map(res => {
                 const vo = new ReservationVO();
@@ -159,6 +181,7 @@ export class ReservationService extends IReservationService {
             return Result.Ok(responseList);
         }
         catch (error) {
+            this.logger.error(`Erro ao listar reservas: ${error.message}`, error.stack);
             return Result.Fail(ConstantsMessagesReservation.ErrorGetAll);
         }
     }

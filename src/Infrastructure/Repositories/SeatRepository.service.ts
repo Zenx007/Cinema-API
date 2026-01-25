@@ -1,4 +1,4 @@
-import { Injectable, Inject } from "@nestjs/common";
+import { Injectable, Inject, Logger } from "@nestjs/common";
 import { Repository } from "typeorm";
 import { ISeatRepository } from "../../Core/RepositoriesInterface/ISeatRepository.interface";
 import { ConstantsMessagesSeat } from "../../Helpers/ConstantsMessages/ConstantsMessages";
@@ -10,10 +10,12 @@ import { Seat, SeatStatus } from "../../Core/Entities/Seat/Seat.entity";
 @Injectable()
 export class SeatRepository extends ISeatRepository {
     private readonly _seatDbContext: Repository<Seat>;
+    private readonly logger = new Logger(SeatRepository.name);
 
     constructor(
         @Inject('SEAT_REPOSITORY')
         private readonly seatDbContext: Repository<Seat>,
+        
     ) {
         super();
         this._seatDbContext = this.seatDbContext;
@@ -25,11 +27,14 @@ export class SeatRepository extends ISeatRepository {
             if (seat == null) 
                 return Result.Fail(ConstantsMessagesSeat.ErrorFindById);
 
+            this.logger.debug(`Alterando status do Assento ${model.id} de '${seat.status}' para '${model.status}'`);
+
             seat.status = model.status;
             const saved = await this._seatDbContext.save(seat);
 
             return Result.Ok(saved);
         } catch (error) {
+            this.logger.error(`Erro ao atualizar Assento ${model.id}: ${error.message}`, error.stack);
             return Result.Fail(ConstantsMessagesSeat.ErrorUpdate);
         }
     }
@@ -42,6 +47,7 @@ export class SeatRepository extends ISeatRepository {
             });
             return seat ?? null;
         } catch (error) {
+            this.logger.error(`Erro na query FindByIdAsync (${id}): ${error.message}`, error.stack);
             return null;
         }
     }
@@ -55,7 +61,8 @@ export class SeatRepository extends ISeatRepository {
                 }
             });
             return list;
-        } catch {
+        } catch (error) {
+            this.logger.error(`Erro ao buscar assentos disponíveis (Sessão ${sessionId}): ${error.message}`, error.stack);
             return null;
         }
     }

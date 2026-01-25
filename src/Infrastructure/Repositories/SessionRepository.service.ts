@@ -1,4 +1,4 @@
-import { Injectable, Inject } from "@nestjs/common";
+import { Injectable, Inject, Logger } from "@nestjs/common";
 import { Repository } from "typeorm";
 import { ISessionRepository } from "../../Core/RepositoriesInterface/ISessionRepository.interface";
 import { ConstantsMessagesSession } from "../../Helpers/ConstantsMessages/ConstantsMessages";
@@ -14,19 +14,22 @@ export class SessionRepository extends ISessionRepository {
     constructor(
         @Inject('SESSION_REPOSITORY')
         private readonly sessionDbContext: Repository<Session>,
+        private readonly logger = new Logger(SessionRepository.name),
     ) {
         super();
         this._sessionDbContext = this.sessionDbContext;
     }
 
-    async InsertAsync(model: Session): Task<Result<Session>> {
+   async InsertAsync(model: Session): Task<Result<Session>> {
         try {
-
+            this.logger.debug(`Inserindo nova sessão. Filme: ${model.movie}, Sala: ${model.room}`);
+            
             const result = await this._sessionDbContext.save(model);
 
             return Result.Ok(result);
         }
         catch (error) {
+            this.logger.error(`Erro ao criar sessão: ${error.message}`, error.stack);
             return Result.Fail(ConstantsMessagesSession.ErrorInsert);
         }
     }
@@ -41,11 +44,14 @@ export class SessionRepository extends ISessionRepository {
             session.room = model.room;
             session.price = model.price;
 
+            this.logger.debug(`Atualizando sessão ${model.id}`);
+
             const saved = await this._sessionDbContext.save(session);
 
             return Result.Ok(saved);
         }
         catch (error) {
+            this.logger.error(`Erro ao atualizar sessão ${model.id}: ${error.message}`, error.stack);
             return Result.Fail(ConstantsMessagesSession.ErrorUpdate);
         }
     }
@@ -58,9 +64,12 @@ export class SessionRepository extends ISessionRepository {
 
             await this._sessionDbContext.delete(id);
 
+            this.logger.log(`Sessão ${id} deletada permanentemente.`);
+
             return Result.Ok();
         }
         catch (error) {
+            this.logger.error(`Erro ao deletar sessão ${id}: ${error.message}`, error.stack);
             return Result.Fail(ConstantsMessagesSession.ErrorDelete);
         }
     }
@@ -71,10 +80,10 @@ export class SessionRepository extends ISessionRepository {
                 where: { id: id },
                 relations: ['seats']
             });
-
             return session ?? null;
         }
         catch (error) {
+            this.logger.error(`Erro na query FindByIdAsync (${id}): ${error.message}`, error.stack);
             return null;
         }
     }
@@ -84,10 +93,10 @@ export class SessionRepository extends ISessionRepository {
             const list: List<Session> = await this._sessionDbContext.find({
                 relations: ['seats']
             });
-
             return list;
         }
-        catch {
+        catch (error) {
+            this.logger.error(`Erro na query FindAllAsync: ${error.message}`, error.stack);
             return null;
         }
     }
