@@ -26,8 +26,8 @@ export class SessionController {
 
             const list = await this._sessionService.GetAll();
             if (list.isFailed) {
-                response.success = false;
-                response.message = list.errors.toString();
+                response.success = false,
+                response.message = list.errors[0];
                 return StatusCode(res, StatusCodes.STATUS_404_NOT_FOUND, response);
             }
 
@@ -60,22 +60,22 @@ export class SessionController {
             const result = await this._sessionService.CreateAsync(model);
             if (result.isFailed) {
                 response.object = null,
-                    response.message = ConstantsMessagesSession.ErrorCreate,
-                    response.success = false;
+                response.message = result.errors[0],
+                response.success = false;
 
                 return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
             }
 
             response.object = result.value,
-                response.success = true;
+            response.success = true;
 
             return StatusCode(res, StatusCodes.STATUS_201_CREATED, response);
         }
         catch (error) {
 
             response.object = null,
-                response.message = ConstantsMessagesSession.ErrorCreate,
-                response.success = false;
+            response.message = ConstantsMessagesSession.ErrorCreate,
+            response.success = false;
 
             return StatusCode(res, StatusCodes.STATUS_500_INTERNAL_SERVER_ERROR, response);
         }
@@ -94,21 +94,21 @@ export class SessionController {
 
             if (result.isFailed) {
                 response.object = null,
-                    response.message = ConstantsMessagesSession.ErrorPrepare;
+                response.message = result.errors[0],
                 response.success = false;
 
                 return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
             }
 
             response.object = result.value,
-                response.success = true;
+            response.success = true;
 
             return StatusCode(res, StatusCodes.STATUS_200_OK, response);
         }
         catch (error) {
             response.message = ConstantsMessagesSession.ErrorPrepare,
-                response.object = null,
-                response.success = false;
+            response.object = null,
+            response.success = false;
 
             return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
         }
@@ -127,20 +127,20 @@ export class SessionController {
 
             if (result.isFailed) {
                 response.object = null,
-                    response.message = ConstantsMessagesSession.ErrorUpdate,
-                    response.success = false;
+                response.message = result.errors[0],
+                response.success = false;
 
                 return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST)
             }
 
             response.object = result.value,
-                response.success = true;
+            response.success = true;
 
             return StatusCode(res, StatusCodes.STATUS_200_OK, response);
         }
         catch (error) {
             response.object = null,
-                response.message = ConstantsMessagesSession.ErrorUpdate;
+            response.message = ConstantsMessagesSession.ErrorUpdate;
             response.success = false;
 
             return StatusCode(res, StatusCodes.STATUS_500_INTERNAL_SERVER_ERROR, response);
@@ -160,14 +160,14 @@ export class SessionController {
 
             if (result.isFailed) {
                 response.object = null,
-                    response.message = ConstantsMessagesSession.ErrorDelete;
+                response.message = result.errors[0],
                 response.success = false;
 
                 return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
             }
 
             response.object = result,
-                response.success = true;
+            response.success = true;
 
             return StatusCode(res, StatusCodes.STATUS_200_OK, response);
         }

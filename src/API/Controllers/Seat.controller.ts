@@ -28,7 +28,7 @@ export class SeatController {
 
             if (result.isFailed) {
                 response.success = false;
-                response.message = ConstantsMessagesSeat.ErrorFindAll;
+                response.message = result.errors[0];
                 return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
             }
 

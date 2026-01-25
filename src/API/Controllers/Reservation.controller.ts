@@ -27,7 +27,7 @@ export class ReservationController {
             const list = await this._reservationService.GetAll();
             if (list.isFailed) {
                 response.success = false;
-                response.message = list.errors.toString();
+                response.message = list.errors[0];
                 return StatusCode(res, StatusCodes.STATUS_404_NOT_FOUND, response);
             }
 
@@ -60,7 +60,7 @@ export class ReservationController {
             const result = await this._reservationService.CreateAsync(model);
             if (result.isFailed) {
                 response.object = null,
-                response.message = ConstantsMessagesReservation.ErrorCreate,
+                response.message = result.errors[0],
                 response.success = false;
 
                 return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
@@ -94,7 +94,7 @@ export class ReservationController {
 
             if (result.isFailed) {
                 response.object = null,
-                response.message = ConstantsMessagesReservation.ErrorPrepare;
+                response.message = result.errors[0],
                 response.success = false;
 
                 return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
@@ -127,7 +127,7 @@ export class ReservationController {
 
             if (result.isFailed) {
                 response.object = null,
-                response.message = ConstantsMessagesReservation.ErrorUpdate,
+                response.message = result.errors[0],
                 response.success = false;
 
                 return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST)
@@ -160,7 +160,7 @@ export class ReservationController {
 
             if (result.isFailed) {
                 response.object = null,
-                response.message = ConstantsMessagesReservation.ErrorDelete;
+                response.message = result.errors[0],
                 response.success = false;
 
                 return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
