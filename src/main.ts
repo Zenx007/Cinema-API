@@ -9,11 +9,32 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { LoggingInterceptor } from './Helpers/Interceptors/logging.interceptor';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { Logger } from '@nestjs/common';
+import { BadRequestException, ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const port = process.env.PORT || 10000;
   const logger = new Logger('Main');
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      stopAtFirstError: false,
+      exceptionFactory: (errors) => {
+        const messages = errors.flatMap(err =>
+          Object.values(err.constraints ?? {})
+        );
+
+        return new BadRequestException({
+          statusCode: 400,
+          error: 'Bad Request',
+          message: messages,
+        });
+      },
+    }),
+  );
 
   app.enableCors({
     origin: [
