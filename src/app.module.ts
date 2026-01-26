@@ -8,9 +8,10 @@ import ServicesStartup, { AllServicesInjects } from './API/Extensions/AddService
 import { DatabaseModule } from './Infrastructure/Database/database.module';
 import { WinstonModule } from 'nest-winston';
 import { winstonConfig } from './Helpers/Logger/winston.config';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [DatabaseModule, WinstonModule.forRoot(winstonConfig)],
+  imports: [DatabaseModule, WinstonModule.forRoot(winstonConfig), ScheduleModule.forRoot()],
   controllers: [...AddControllers],
   providers: [
     AppService,

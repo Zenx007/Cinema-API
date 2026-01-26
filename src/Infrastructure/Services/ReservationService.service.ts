@@ -8,12 +8,13 @@ import { List } from "../../Helpers/CustomObjects/List.Interface";
 import { Result } from "../../Helpers/CustomObjects/Result";
 import { Task } from "../../Helpers/CustomObjects/Task.Interface";
 import { ISeatRepository } from "../../Core/RepositoriesInterface/ISeatRepository.interface";
+import { SeatStatus } from "../../Core/Entities/Seat/Seat.entity";
 
 @Injectable()
 export class ReservationService extends IReservationService {
     private readonly _reservationRepo: IReservationRepository;
     private readonly _seatRepo: ISeatRepository;
-    
+
     private readonly logger = new Logger(ReservationService.name);
 
     constructor(
@@ -34,23 +35,26 @@ export class ReservationService extends IReservationService {
                 return Result.Fail(ConstantsMessagesSeat.ErrorNotFound);
             }
 
-            if(seat.status !== 'AVAILABLE') {
+            if (seat.status !== 'AVAILABLE') {
                 this.logger.warn(`Assento ${model.seatId} indisponível. Status atual: ${seat.status}`);
                 return Result.Fail(ConstantsMessagesReservation.ErrorSeatNotAvailable);
             }
 
-            const reservationVerify = await this._reservationRepo.FindBySeatAsync(model.seatId);
-            if(reservationVerify != null) {
-                this.logger.warn(`Já existe uma reserva ativa para o assento ${model.seatId}`);
-                return Result.Fail(ConstantsMessagesReservation.ErrorReservationExist);
+            seat.status = SeatStatus.RESERVED;
+
+            const seatUpdateResult = await this._seatRepo.UpdateAsync(seat);
+
+            if (seatUpdateResult.isFailed) {
+                this.logger.warn(`Concorrência detectada ao tentar travar o assento ${model.seatId}`);
+                return Result.Fail(ConstantsMessagesReservation.ErrorSeatNotAvailable);
             }
 
             const reservation = new Reservation();
             reservation.userId = model.userId;
             reservation.seatId = model.seatId;
-            reservation.paidPrice = seat.session.price; 
+            reservation.paidPrice = seat.session.price;
             reservation.status = ReservationStatus.PENDING;
-            reservation.expiresAt = new Date(Date.now() + 30 * 1000); 
+            reservation.expiresAt = new Date(Date.now() + 30 * 1000);
 
             const savedResult = await this._reservationRepo.InsertAsync(reservation);
 
@@ -60,7 +64,7 @@ export class ReservationService extends IReservationService {
             }
 
             const createdReservation = savedResult.value;
-            
+
             this.logger.log(`Reserva ${createdReservation.id} criada com sucesso.`);
 
             const response = new ReservationVO();
@@ -92,15 +96,15 @@ export class ReservationService extends IReservationService {
 
             const reservationToUpdate = new Reservation();
             reservationToUpdate.id = model.id;
-            reservationToUpdate.status = model.status as ReservationStatus; 
-            
+            reservationToUpdate.status = model.status as ReservationStatus;
+
             const updateResult = await this._reservationRepo.UpdateAsync(reservationToUpdate);
 
             if (updateResult.isFailed || updateResult.value == null)
                 return Result.Fail(ConstantsMessagesReservation.ErrorPut);
 
             const updatedReservation = updateResult.value;
-            
+
             this.logger.log(`Status da reserva ${model.id} alterado para ${updatedReservation.status}`);
 
             const response = new ReservationVO();
@@ -130,7 +134,7 @@ export class ReservationService extends IReservationService {
 
             if (response.isFailed)
                 return Result.Fail(ConstantsMessagesReservation.ErrorDelete);
-            
+
             this.logger.log(`Reserva ${id} removida com sucesso.`);
 
             return Result.Ok();

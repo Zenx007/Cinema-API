@@ -11,4 +11,5 @@ export abstract class IReservationRepository {
     abstract FindByIdAsync(id: string): Task<Reservation | null>;
     abstract FindAllAsync(): Task<List<Reservation> | null>;
     abstract FindBySeatAsync(id: string): Task<Reservation | null>;
+    abstract FindExpiredAsync(date: Date): Task<List<Reservation> | null>;
 }

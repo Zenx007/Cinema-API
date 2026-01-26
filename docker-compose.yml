@@ -40,6 +40,23 @@ services:
     networks:
       - cinema-network
 
+  redis:
+    image: redis:alpine
+    container_name: cinema_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - cinema-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: cinema_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672" 
+    networks:
+      - cinema-network
+
 networks:
   cinema-network:
     driver: bridge

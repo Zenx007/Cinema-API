@@ -1,11 +1,11 @@
 import { Injectable, Inject, Logger } from "@nestjs/common";
-import { MoreThan, Repository } from "typeorm";
+import { LessThan, MoreThan, Repository } from "typeorm";
 import { IReservationRepository } from "../../Core/RepositoriesInterface/IReservationRepository.interface";
 import { ConstantsMessagesReservation } from "../../Helpers/ConstantsMessages/ConstantsMessages";
 import { List } from "../../Helpers/CustomObjects/List.Interface";
 import { Result } from "../../Helpers/CustomObjects/Result";
 import { Task } from "../../Helpers/CustomObjects/Task.Interface";
-import { Reservation } from "../../Core/Entities/Reservation/Reservation.entity";
+import { Reservation, ReservationStatus } from "../../Core/Entities/Reservation/Reservation.entity";
 
 @Injectable()
 export class ReservationRepository extends IReservationRepository {
@@ -112,6 +112,22 @@ export class ReservationRepository extends IReservationRepository {
         }
         catch (error) {
             this.logger.error(`Erro na query FindBySeatAsync (${id}): ${error.message}`, error.stack);
+            return null;
+        }
+    }
+
+    async FindExpiredAsync(date: Date): Task<List<Reservation> | null> {
+        try {
+            const list = await this._reservationDbContext.find({
+                where: {
+                    status: ReservationStatus.PENDING, 
+                    expiresAt: LessThan(date)         
+                },
+                relations: ['seat'] 
+            });
+            return list;
+        } catch (error) {
+            this.logger.error(`Erro ao buscar reservas expiradas: ${error.message}`, error.stack);
             return null;
         }
     }
