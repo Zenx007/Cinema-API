@@ -73,6 +73,7 @@ export class ReservationService extends IReservationService {
             response.seatId = createdReservation.seatId;
             response.status = createdReservation.status;
             response.expiresAt = createdReservation.expiresAt;
+            response.movie = seat.session.movie;
 
             return Result.Ok(response);
         }
@@ -158,6 +159,7 @@ export class ReservationService extends IReservationService {
             response.seatId = reservation.seatId;
             response.status = reservation.status;
             response.expiresAt = reservation.expiresAt;
+            response.movie = reservation.seat.session.movie;
 
             return Result.Ok(response);
         }
@@ -179,6 +181,7 @@ export class ReservationService extends IReservationService {
                 vo.seatId = res.seatId;
                 vo.status = res.status;
                 vo.expiresAt = res.expiresAt;
+                vo.movie = res.seat.session.movie;
                 return vo;
             });
 
@@ -186,6 +189,35 @@ export class ReservationService extends IReservationService {
         }
         catch (error) {
             this.logger.error(`Erro ao listar reservas: ${error.message}`, error.stack);
+            return Result.Fail(ConstantsMessagesReservation.ErrorGetAll);
+        }
+    }
+
+    async GetHistoryAsync(userId: string): Task<Result<List<ReservationVO>>> {
+        try {
+            if (!userId) return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
+
+            this.logger.debug(`Buscando histórico de reservas para o usuário: ${userId}`);
+
+            const list = await this._reservationRepo.FindByUserIdAsync(userId);
+
+            if (list == null) 
+                return Result.Fail(ConstantsMessagesReservation.ErrorGetAll);
+
+            const responseList: ReservationVO[] = list.map(res => {
+                const vo = new ReservationVO();
+                vo.id = res.id;
+                vo.userId = res.userId;
+                vo.seatId = res.seatId;
+                vo.status = res.status;
+                vo.expiresAt = res.expiresAt;
+                vo.movie = res.seat.session.movie;
+                return vo;
+            });
+
+            return Result.Ok(responseList);
+        } catch (error) {
+            this.logger.error(`Erro ao buscar histórico: ${error.message}`, error.stack);
             return Result.Fail(ConstantsMessagesReservation.ErrorGetAll);
         }
     }

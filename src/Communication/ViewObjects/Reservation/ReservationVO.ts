@@ -16,6 +16,9 @@ export class ReservationVO {
 
     @ApiProperty()
     expiresAt: Date;
+
+    @ApiProperty()
+    movie: string;
 }
 
 export class ReservationSaveVO {

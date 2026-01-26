@@ -120,15 +120,24 @@ export class ReservationRepository extends IReservationRepository {
         try {
             const list = await this._reservationDbContext.find({
                 where: {
-                    status: ReservationStatus.PENDING, 
-                    expiresAt: LessThan(date)         
+                    status: ReservationStatus.PENDING,
+                    expiresAt: LessThan(date)
                 },
-                relations: ['seat'] 
+                relations: ['seat']
             });
             return list;
         } catch (error) {
             this.logger.error(`Erro ao buscar reservas expiradas: ${error.message}`, error.stack);
             return null;
         }
+    }
+
+    async FindByUserIdAsync(userId: string): Task<List<Reservation> | null> {
+        try {
+            return await this._reservationDbContext.find({
+                where: { userId: userId },
+                relations: ['seat', 'seat.session']
+            });
+        } catch { return null; }
     }
 }
