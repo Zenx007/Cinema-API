@@ -21,7 +21,8 @@ describe('Reservation Module - Concurrency Integrity (E2E)', () => {
                 movie: 'Concurrency Stress Test', 
                 room: 'Lab-01', 
                 price: 20, 
-                numberOfSeats: 16 
+                numberOfSeats: 16 ,
+                startTime: '20:00'
             });
 
         const sessionVO = sessionRes.body.object;
@@ -34,8 +35,8 @@ describe('Reservation Module - Concurrency Integrity (E2E)', () => {
 
     it('should ensure atomicity: only one reservation succeeds among simultaneous requests', async () => {
 
-        const clientA = { userId: '7e2d252d-9824-4997-9f7b-7312e0d76397', seatId: targetSeatId };
-        const clientB = { userId: '10e9f3a3-ddea-4648-8a23-772499f792be', seatId: targetSeatId };
+        const clientA = { userId: 'Joao', seatId: targetSeatId };
+        const clientB = { userId: 'Maria', seatId: targetSeatId };
 
         console.log(`[INFO] Initiating parallel reservation requests for Seat ID: ${targetSeatId}`);
 
