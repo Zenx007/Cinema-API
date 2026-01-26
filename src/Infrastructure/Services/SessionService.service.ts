@@ -159,7 +159,10 @@ export class SessionService extends ISessionService {
             if (!id) return Result.Fail(ConstantsMessagesSession.ErrorNotFound);
 
             const session = await this._sessionRepo.FindByIdAsync(id);
-            if (session == null) return Result.Fail(ConstantsMessagesSession.ErrorNotFound);
+            if (session == null) {
+                this.logger.error(`Erro ao buscar a sessão com o id ${id}.`);
+                return Result.Fail(ConstantsMessagesSession.ErrorNotFound);
+            }
 
             const response = new SessionVO();
             response.id = session.id;
@@ -167,6 +170,8 @@ export class SessionService extends ISessionService {
             response.roomId = session.room;
             response.price = session.price;
             response.startTime = session.startTime;
+
+            this.logger.error(`Sessão ${id} buscada com sucesso.`);
 
             return Result.Ok(response);
         }
@@ -178,8 +183,11 @@ export class SessionService extends ISessionService {
 
     async GetAll(): Task<Result<List<SessionVO>>> {
         try {
-            const list = await this._sessionRepo.FindAllAsync();
-            if (list == null) return Result.Fail(ConstantsMessagesSession.ErrorGetAll);
+            const list = await this._sessionRepo.FindAllAsync(); { }
+            if (list == null || list.length === 0) {
+                this.logger.log(`Lista de  sessões retornando vazia`);
+                return Result.Ok([] as SessionVO[]);
+            }
 
             const responseList: SessionVO[] = list.map(session => {
                 const vo = new SessionVO();
@@ -191,6 +199,8 @@ export class SessionService extends ISessionService {
 
                 return vo;
             });
+
+            this.logger.log(`Lista de  sessões retornando com sucesso`);
 
             return Result.Ok(responseList);
         }

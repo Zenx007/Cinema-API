@@ -53,8 +53,10 @@ export class ReservationService extends IReservationService {
                 return Result.Fail(ConstantsMessagesReservation.ErrorSeatNotAvailable);
             }
 
+            const normalizedUserId = model.userId.trim().toLowerCase();
+
             const reservation = new Reservation();
-            reservation.userId = model.userId;
+            reservation.userId = normalizedUserId;
             reservation.seatId = model.seatId;
             reservation.paidPrice = seat.session.price;
             reservation.status = ReservationStatus.PENDING;
@@ -105,7 +107,7 @@ export class ReservationService extends IReservationService {
 
     async UpdateAsync(model: ReservationVO): Task<Result<ReservationVO>> {
         try {
-            if (!model.id) 
+            if (!model.id)
                 return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
 
             this.logger.debug(`Atualizando reserva ${model.id} para status ${model.status}`);
@@ -175,10 +177,10 @@ export class ReservationService extends IReservationService {
     async GetById(id: string): Task<Result<ReservationVO>> {
         try {
             if (!id)
-                 return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
+                return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
 
             const reservation = await this._reservationRepo.FindByIdAsync(id);
-            if (reservation == null) 
+            if (reservation == null)
                 return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
 
             const response = new ReservationVO();
@@ -204,8 +206,10 @@ export class ReservationService extends IReservationService {
     async GetAll(): Task<Result<List<ReservationVO>>> {
         try {
             const list = await this._reservationRepo.FindAllAsync();
-            if (list == null)
-                 return Result.Fail(ConstantsMessagesReservation.ErrorGetAll);
+            if (list == null || list.length === 0) {
+                this.logger.log(`Lista de  reservas retornando vazia`);
+                return Result.Ok([] as ReservationVO[]);
+            }
 
             const responseList: ReservationVO[] = list.map(res => {
                 const vo = new ReservationVO();
@@ -223,6 +227,8 @@ export class ReservationService extends IReservationService {
                 return vo;
             });
 
+            this.logger.log(`Lista de  reservas retornando com sucesso`);
+
             return Result.Ok(responseList);
         }
         catch (error) {
@@ -233,14 +239,19 @@ export class ReservationService extends IReservationService {
 
     async GetHistoryAsync(userId: string): Task<Result<List<ReservationVO>>> {
         try {
-            if (!userId) return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
+            if (!userId)
+                return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
 
             this.logger.debug(`Buscando histórico de reservas para o usuário: ${userId}`);
 
-            const list = await this._reservationRepo.FindByUserIdAsync(userId);
+            const normalizedUserId = userId.trim().toLowerCase();
 
-            if (list == null)
-                return Result.Fail(ConstantsMessagesReservation.ErrorGetAll);
+            const list = await this._reservationRepo.FindByUserIdAsync(normalizedUserId);
+
+            if (list == null || list.length === 0) {
+                this.logger.log(`Historico de compras vazio retornando para o usuário: ${userId}`);
+                return Result.Ok([] as ReservationVO[]);
+            }
 
             const responseList: ReservationVO[] = list.map(res => {
                 const vo = new ReservationVO();
@@ -254,7 +265,7 @@ export class ReservationService extends IReservationService {
                 } else {
                     vo.expiresAt = null;
                 }
-
+                this.logger.log(`Historico de compras retornando para o usuário: ${userId}`);
                 return vo;
             });
 
