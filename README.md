@@ -4,13 +4,17 @@
 
 API RESTful desenvolvida em **Node.js (NestJS)** para criar e gerenciar reservas de cinema
 
-## 2. Tecnologias Escolhidas
-
 ### Banco de Dados: PostgreSQL
+* **Motivo:** Escolhido pela sua robustez, suporte a transações ACID e integridade referencial. Essencial para garantir a consistência financeira e de inventário (Assentos).
+* **Uso:** Armazena Sessões, Assentos e Reservas.
 
 ### Cache: Redis
+* **Motivo:** Performance de leitura.
+* **Uso:** Utilizado para cachear a lista de assentos disponíveis (`GET /Seat/Available`). Em um cenário de alta demanda (ex: estreia de filme), isso evita que milhares de requisições de leitura batam diretamente no PostgreSQL, reduzindo a latência.
 
 ### Mensageria: RabbitMQ
+* **Motivo:** Desacoplamento e processamento assíncrono.
+* **Uso:** Ao confirmar uma reserva, a API publica eventos (`reservation_created`, `payment_confirmed`). Um consumidor processa esses eventos em background (simulando envio de e-mails e notas fiscais) sem bloquear a resposta HTTP para o usuário final, melhorando a experiência de uso (UX).
 
 ## 3. Como Executar
 
@@ -80,13 +84,51 @@ A "Fonte da Verdade" (Source of Truth) é única: o **PostgreSQL**. O Redis é u
 
 Principais endpoints (Documentação completa no Swagger):
 
-| Método | Rota | Descrição |
-| :--- | :--- | :--- |
-| `POST` | `/Session/Create` | Cria uma nova sessão de cinema e gera os assentos automaticamente. |
-| `GET` | `/Seat/GetAvailable` | Lista assentos livres (cacheado no Redis). |
-| `POST` | `/Reservation/Create` | Cria uma reserva |
-| `POST` | `/Reservation/ConfirmPayment` | Confirma uma reserva |
-| `DELETE` | `/Session/Delete:id` | Remove uma sessão (Possui validação se há ingressos vendidos). |
+#### 1. Criar Sessão (`POST /Session/Create`
+Cria a sessão e popula automaticamente os assentos no banco de dados.
+
+**Body:**
+```json
+{
+  "movie": "O Auto da Compadecida 2",
+  "room": "Sala IMAX 01",
+  "price": 45.90,
+  "numberOfSeats": 50,
+  "startTime": "20:00"
+}
+```
+### 2. Listar Assentos Disponíveis (GET /Seat/GetAvailable)
+
+Retorna apenas os assentos que não estão ocupados para uma determinada sessão.
+
+Query Param: ?sessionId={id-da-sessao}
+
+Exemplo de URL: 
+
+```bash
+http://localhost:10000/Seat/GetAvailable?sessionId=a1b2c3d4-e5f6-7890-1234-56789abcdef0
+```
+
+### 3. Criar Reserva (POST /Reservation/Create)
+Tenta reservar um assento. Se houver concorrência (dois usuários tentando o mesmo assento), o segundo request falhará
+
+**Body**
+```json
+{
+  "userId": "user-uuid-exemplo",
+  "seatId": "seat-uuid-1"
+}
+```
+
+### 4. Confirmar Pagamento (POST /Reservation/ConfirmPayment)
+Confirma a reserva e dispara eventos de notificação (e-mail/nota fiscal) via RabbitMQ.
+
+**Body**
+```json
+{
+  "reservationId": "1b2c3d4-e5f6-7890-1234-56789abcdef0"
+}
+```
 
 ---
 
