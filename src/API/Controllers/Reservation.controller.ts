@@ -114,39 +114,6 @@ export class ReservationController {
         }
     }
 
-    @ApiOperation({ summary: 'Update - Atualiza status da reserva' })
-    @Put('Update')
-    async UpdateAsync(
-        @Res() res: Response,
-        @Req() req: Request,
-        @Body() model: ReservationVO,
-    ) {
-        const response = new ApiResponse<ReservationVO>();
-        try {
-            const result = await this._reservationService.UpdateAsync(model);
-
-            if (result.isFailed) {
-                response.object = null,
-                    response.message = result.errors[0],
-                    response.success = false;
-
-                return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST)
-            }
-
-            response.object = result.value,
-                response.success = true;
-
-            return StatusCode(res, StatusCodes.STATUS_200_OK, response);
-        }
-        catch (error) {
-            response.object = null,
-                response.message = ConstantsMessagesReservation.ErrorUpdate;
-            response.success = false;
-
-            return StatusCode(res, StatusCodes.STATUS_500_INTERNAL_SERVER_ERROR, response);
-        }
-    }
-
     @ApiOperation({ summary: 'Delete - Cancela/Remove uma reserva' })
     @Delete('Delete')
     async DeleteAsync(

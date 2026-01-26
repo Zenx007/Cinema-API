@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNotEmpty, IsNumber, IsString } from "class-validator";
+import { IsNotEmpty, IsNumber, IsString, Matches } from "class-validator";
 
 export class SessionVO {
     @ApiProperty()
@@ -12,7 +12,7 @@ export class SessionVO {
     roomId: string;
 
     @ApiProperty()
-    startTime: Date;
+    startTime: string;
 
     @ApiProperty()
     price: number;
@@ -39,4 +39,12 @@ export class SessionSaveVO {
     @IsNotEmpty({ message: 'O número de assentos é obrigatório' })
     @IsNumber({}, { message: 'O número de assentos deve ser um número' })
     numberOfSeats: number;
+
+    @ApiProperty({})
+    @IsString()
+    @IsNotEmpty()
+    @Matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, { 
+        message: 'O horário deve estar no formato HH:MM (ex: 18:30)' 
+    })
+    startTime: string;
 }

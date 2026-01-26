@@ -15,6 +15,9 @@ export class Session {
     @Column('decimal', { precision: 10, scale: 2 })
     price: number;
 
+    @Column({ type: 'time', name: 'start_time' }) 
+    startTime: string;
+
     @OneToMany(() => Seat, (seat) => seat.session, { cascade: true })
     seats: Seat[];
 }

@@ -35,6 +35,7 @@ export class SessionService extends ISessionService {
             session.movie = model.movie;
             session.room = model.room;
             session.price = model.price;
+            session.startTime = model.startTime;
 
             const seats: Seat[] = [];
             const seatsPerRow = 10; 
@@ -93,6 +94,7 @@ export class SessionService extends ISessionService {
             sessionToUpdate.movie = model.movie;
             sessionToUpdate.room = model.roomId;
             sessionToUpdate.price = model.price;
+            sessionToUpdate.startTime = model.startTime;
 
             const updateResult = await this._sessionRepo.UpdateAsync(sessionToUpdate);
 
@@ -150,6 +152,7 @@ export class SessionService extends ISessionService {
             response.movie = session.movie;
             response.roomId = session.room;
             response.price = session.price;
+            response.startTime = session.startTime;
 
             return Result.Ok(response);
         }
@@ -170,6 +173,8 @@ export class SessionService extends ISessionService {
                 vo.movie = session.movie;
                 vo.roomId = session.room;
                 vo.price = session.price;
+                vo.startTime = session.startTime;
+
                 return vo;
             });
 
