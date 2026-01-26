@@ -1,98 +1,117 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Cinema API 
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 1. Visão Geral
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+API RESTful desenvolvida em **Node.js (NestJS)** para criar e gerenciar reservas de cinema
 
-## Description
+## 2. Tecnologias Escolhidas
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Banco de Dados: PostgreSQL
 
-## Project setup
+### Cache: Redis
+
+### Mensageria: RabbitMQ
+
+## 3. Como Executar
+
+### Pré-requisitos
+* **Docker** e **Docker Compose** instalados.
+* Portas `10000` (API), `5432` (Postgres), `6379` (Redis) e `5672/15672` (RabbitMQ) livres.
+
+### Comandos para subir o ambiente
+O projeto é totalmente conteinerizado. Para iniciar:
 
 ```bash
-$ npm install
+# Sobe a aplicação e todos os serviços (DB, Redis, Rabbit)
+docker-compose up -d --build
 ```
 
-## Compile and run the project
+### Como popular dados iniciais e Testar Manualmente
+A API possui documentação **Swagger**. Acesse:
+👉 **[http://localhost:10000/api-docs](http://localhost:10000/api-docs)**
+
+1. Use o endpoint `POST /Session` para criar uma sessão com o seguinte corpo:
+    ```json
+    {
+      "movie": "Vingadores",
+      "room": "A",
+      "price": 30,
+      "numberOfSeats": 20,
+      "startTime": "20:00"
+    }
+    ```
+2. Copie o ID da sessão gerada na resposta.
+3. Use o endpoint `GET /Seat/GetAvailable` com o ID da sessão para ver os assentos gerados.
+4. Use o endpoint `POST /Reservation` para tentar reservar um assento.
+5. Passe um nome ou uuid para o usuário:
+   ```json
+    {
+      "userId": "Maria",
+      "seatId": "10e9f3a3-ddea-4648-8a23-772499f792be"
+    }
+   ```
+
+### Como executar testes (Prova de Concorrência)
+Foi implementado um teste **E2E (End-to-End)** que simula uma "Race Condition" real, disparando requisições paralelas contra a API.
 
 ```bash
-# development
-$ npm run start
+docker exec -it cinema_api npm run test:e2e -- test/concurrency.e2e-spec.ts
+````
 
-# watch mode
-$ npm run start:dev
+## 4. Estratégias Implementadas
 
-# production mode
-$ npm run start:prod
-```
+### Solução para Race Conditions (Condição de Corrida)
+Utilizei **Optimistic Locking (Travamento Otimista)** com versionamento de linha.
 
-## Run tests
+* **Implementação:** A entidade `Seat` possui uma coluna `@VersionColumn`.
+* **Funcionamento:** Ao tentar atualizar um assento para `RESERVED`, o TypeORM verifica se a versão no banco é igual à versão lida na memória. Se outro usuário tiver alterado o registro milissegundos antes, a versão não baterá e o banco rejeitará a gravação
 
-```bash
-# unit tests
-$ npm run test
+### Coordenação entre Instâncias
+A "Fonte da Verdade" (Source of Truth) é única: o **PostgreSQL**. O Redis é utilizado apenas para leitura eventual. A consistência de escrita é garantida pelo banco relacional, permitindo que múltiplas instâncias da API rodem sem conflito, desde que respeitem o versionamento do banco.
 
-# e2e tests
-$ npm run test:e2e
+### Prevenção de Deadlocks
+* As transações são curtas e atômicas.
+* A ordem de atualização é consistente (sempre atualiza Assento -> Insere Reserva), evitando dependências circulares.
+* O uso de *Optimistic Locking* elimina a necessidade de `SELECT ... FOR UPDATE` longos, que são a principal causa de deadlocks em sistemas tradicionais.
 
-# test coverage
-$ npm run test:cov
-```
+---
 
-## Deployment
+## 5. Endpoints da API
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Principais endpoints (Documentação completa no Swagger):
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+| Método | Rota | Descrição |
+| :--- | :--- | :--- |
+| `POST` | `/Session/Create` | Cria uma nova sessão de cinema e gera os assentos automaticamente. |
+| `GET` | `/Seat/GetAvailable` | Lista assentos livres (cacheado no Redis). |
+| `POST` | `/Reservation/Create` | Cria uma reserva |
+| `POST` | `/Reservation/ConfirmPayment` | Confirma uma reserva |
+| `DELETE` | `/Session/Delete:id` | Remove uma sessão (Possui validação se há ingressos vendidos). |
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+---
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 6. Decisões Técnicas
 
-## Resources
+* **Consumer Híbrido:** Optei por rodar o *Consumer* do RabbitMQ dentro da própria aplicação NestJS (usando `connectMicroservice`).
+    * **Justificativa:** Simplifica a infraestrutura para o teste técnico (um único container) e facilita o desenvolvimento, mantendo, contudo, o desacoplamento lógico do código. Em produção, isso poderia ser extraído facilmente para um Pod/Container separado.
+* **Validação Manual na Deleção:** Em vez de usar `ON DELETE CASCADE` indiscriminadamente, implementei uma verificação de lógica de negócio ("Sessão tem reservas?") antes de permitir a exclusão, prevenindo perdas de dados catastróficas.
+* **Arquitetura em Camadas:** Separação clara entre `Controller` (HTTP), `Service` (Regra de Negócio) e `Repository` (Acesso a Dados).
 
-Check out a few resources that may come in handy when working with NestJS:
+---
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## 7. Limitações Conhecidas
 
-## Support
+* **Autenticação:** O sistema simula usuários via ID, mas não possui uma camada completa de JWT/OAuth2 implementada.
+* **Pagamento Simulado:** O processamento de pagamento é apenas um log no sistema, sem integração com gateways reais (Stripe/Pagar.me).
+* **Front-end:** A solução é puramente Backend/API.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+---
 
-## Stay in touch
+## 8. Melhorias Futuras
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+Com mais tempo, implementaria:
 
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+1.  **Rate Limiting (@nestjs/throttler):** Para proteger a API contra ataques de força bruta ou scripts de bots tentando reservar todos os assentos.
+2.  **Health Checks (@nestjs/terminus):** Endpoints para monitorar a saúde da conexão com Redis e RabbitMQ, vital para orquestradores como Kubernetes.
+3.  **Dead Letter Queues (DLQ):** Configurar filas de erro no RabbitMQ para mensagens que falharam no processamento, permitindo re-tentativa manual.
+4.  **Worker Dedicado:** Separar o consumidor de mensagens em um microsserviço isolado para escalar independentemente da API.
