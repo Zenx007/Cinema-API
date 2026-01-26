@@ -62,6 +62,8 @@ export class SessionRepository extends ISessionRepository {
             if (!session)
                 return Result.Fail(ConstantsMessagesSession.ErrorNotFound);
 
+            session.seats = [];
+
             await this._sessionDbContext.delete(id);
 
             this.logger.log(`Sessão ${id} deletada permanentemente.`);

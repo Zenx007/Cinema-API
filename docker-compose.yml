@@ -44,7 +44,7 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: cinema_db
     ports:
-      - "5432:5432"
+      - "5437:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:

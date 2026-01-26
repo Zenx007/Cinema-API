@@ -140,4 +140,19 @@ export class ReservationRepository extends IReservationRepository {
             });
         } catch { return null; }
     }
+
+    async FindBySessionIdAsync(sessionId: string): Task<List<Reservation> | null> {
+        try {
+            return await this._reservationDbContext.find({
+                where: {
+                    seat: {
+                        session: {
+                            id: sessionId
+                        }
+                    }
+                },
+                relations: ['seat', 'seat.session']
+            });
+        } catch { return null; }
+    }
 }

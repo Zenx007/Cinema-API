@@ -12,6 +12,7 @@ export const ConstantsMessagesSession = {
     ErrorGetAll: "Erro ao buscar a lista de sessões",
     ErrorNotFound: "Erro, a sessão não existe",
     ErrorMinSeats: "Erro: A sessão deve ter no mínimo 16 assentos.",
+    ErrorDeleteWithReservations: "Erro, não é possível deletar a sessão pois existem reservas associadas",
 
     // Success Messages
     SuccessCreate: "Sessão criada com sucesso",

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common"; 
+import { Injectable, Logger } from "@nestjs/common";
 import { SessionSaveVO, SessionVO } from "../../Communication/ViewObjects/Session/SessionVO";
 import { Seat, SeatStatus } from "../../Core/Entities/Seat/Seat.entity";
 import { ISessionRepository } from "../../Core/RepositoriesInterface/ISessionRepository.interface";
@@ -8,17 +8,23 @@ import { List } from "../../Helpers/CustomObjects/List.Interface";
 import { Result } from "../../Helpers/CustomObjects/Result";
 import { Task } from "../../Helpers/CustomObjects/Task.Interface";
 import { Session } from "../../Core/Entities/Session/Session.entity";
+import { IReservationRepository } from "../../Core/RepositoriesInterface/IReservationRepository.interface";
 
 @Injectable()
 export class SessionService extends ISessionService {
     private readonly _sessionRepo: ISessionRepository;
+    private readonly _reservationRepo: IReservationRepository;
+
     private readonly logger = new Logger(SessionService.name);
 
     constructor(
         private readonly sessionRepo: ISessionRepository,
+        private readonly reservationRepo: IReservationRepository,
+
     ) {
         super();
         this._sessionRepo = this.sessionRepo;
+        this._reservationRepo = this.reservationRepo;
     }
 
     async CreateAsync(model: SessionSaveVO): Task<Result<SessionVO>> {
@@ -38,8 +44,8 @@ export class SessionService extends ISessionService {
             session.startTime = model.startTime;
 
             const seats: Seat[] = [];
-            const seatsPerRow = 10; 
-            
+            const seatsPerRow = 10;
+
             for (let i = 0; i < model.numberOfSeats; i++) {
                 const seat = new Seat();
                 const rowIndex = Math.floor(i / seatsPerRow);
@@ -49,7 +55,7 @@ export class SessionService extends ISessionService {
                 seat.row = rowLetter;
                 seat.number = seatNumber;
                 seat.status = SeatStatus.AVAILABLE;
-                
+
                 seats.push(seat);
             }
             session.seats = seats;
@@ -62,7 +68,7 @@ export class SessionService extends ISessionService {
             }
 
             const createdSession = savedResult.value;
-            
+
             this.logger.log(`Sessão ${createdSession.id} criada com ${model.numberOfSeats} assentos gerados.`);
 
             const response = new SessionVO();
@@ -70,6 +76,7 @@ export class SessionService extends ISessionService {
             response.movie = createdSession.movie;
             response.roomId = createdSession.room;
             response.price = createdSession.price;
+            response.startTime = createdSession.startTime;
 
             return Result.Ok(response);
         }
@@ -109,6 +116,7 @@ export class SessionService extends ISessionService {
             response.movie = updatedSession.movie;
             response.roomId = updatedSession.room;
             response.price = updatedSession.price;
+            response.startTime = updatedSession.startTime;
 
             return Result.Ok(response);
         }
@@ -124,6 +132,12 @@ export class SessionService extends ISessionService {
             if (sessionDelete == null) {
                 this.logger.warn(`Sessão ${id} não encontrada para deleção.`);
                 return Result.Fail(ConstantsMessagesSession.ErrorNotFound);
+            }
+
+            const seats = await this._reservationRepo.FindBySessionIdAsync(id);
+            if (seats != null && seats.length > 0) {
+                this.logger.warn(`Tentativa de deletar sessão ${id} que possui reservas associadas.`);
+                return Result.Fail(ConstantsMessagesSession.ErrorDeleteWithReservations);
             }
 
             const response = await this._sessionRepo.DeleteAsync(id);

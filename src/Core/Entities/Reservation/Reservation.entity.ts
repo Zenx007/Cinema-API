@@ -12,7 +12,7 @@ export class Reservation {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column()
+    @Column()   
     userId: string;
 
     @Column()
