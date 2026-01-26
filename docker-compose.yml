@@ -3,6 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: builder  
+    command: npm run start:dev 
+    volumes:
+      - .:/usr/src/app 
+      - /usr/src/app/node_modules
     container_name: cinema_api
     restart: always
     ports:

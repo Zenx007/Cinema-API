@@ -23,14 +23,9 @@ export class SeatRepository extends ISeatRepository {
 
     async UpdateAsync(model: Seat): Task<Result<Seat>> {
         try {
-            const seat = await this.FindByIdAsync(model.id);
-            if (seat == null) 
-                return Result.Fail(ConstantsMessagesSeat.ErrorFindById);
+            this.logger.debug(`Tentando atualizar Assento ${model.id} (Versão: ${model.version})`);
 
-            this.logger.debug(`Alterando status do Assento ${model.id} de '${seat.status}' para '${model.status}'`);
-
-            seat.status = model.status;
-            const saved = await this._seatDbContext.save(seat);
+            const saved = await this._seatDbContext.save(model);
 
             return Result.Ok(saved);
         } catch (error) {
