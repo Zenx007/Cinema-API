@@ -208,4 +208,34 @@ export class ReservationController {
             return StatusCode(res, StatusCodes.STATUS_500_INTERNAL_SERVER_ERROR, response);
         }
     }
+
+    @ApiOperation({ summary: 'ConfirmPayment - Confirma o pagamento e finaliza a reserva' })
+    @Post('ConfirmPayment')
+    @ApiQuery({ name: 'reservationId', required: true, type: String })
+    async ConfirmPaymentAsync(
+        @Res() res: Response,
+        @Req() req: Request,
+        @Query('reservationId') reservationId: string
+    ) {
+        const response = new ApiResponse<ReservationVO>();
+        try {
+            const result = await this._reservationService.ConfirmPaymentAsync(reservationId);
+
+            if (result.isFailed) {
+                response.success = false;
+                response.message = result.errors ? result.errors[0] : "Erro ao confirmar pagamento";
+                return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
+            }
+
+            response.success = true;
+            response.object = result.value;
+            response.message = "Pagamento confirmado com sucesso!";
+
+            return StatusCode(res, StatusCodes.STATUS_200_OK, response);
+        } catch (error) {
+            response.success = false;
+            response.message = "Erro interno ao processar pagamento";
+            return StatusCode(res, StatusCodes.STATUS_500_INTERNAL_SERVER_ERROR, response);
+        }
+    }
 }

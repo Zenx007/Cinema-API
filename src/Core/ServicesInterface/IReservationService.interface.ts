@@ -13,4 +13,5 @@ export abstract class IReservationService {
     abstract GetById (id: string): Task<Result<ReservationVO>>;
     abstract GetAll (): Task<Result<List<ReservationVO>>>;
     abstract GetHistoryAsync(userId: string): Task<Result<List<ReservationVO>>>;
+    abstract ConfirmPaymentAsync(reservationId: string): Task<Result<ReservationVO>>;
 }

@@ -221,4 +221,54 @@ export class ReservationService extends IReservationService {
             return Result.Fail(ConstantsMessagesReservation.ErrorGetAll);
         }
     }
+
+    async ConfirmPaymentAsync(reservationId: string): Task<Result<ReservationVO>> {
+        try {
+            if (!reservationId) return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
+
+            this.logger.debug(`Iniciando confirmação de pagamento para reserva: ${reservationId}`);
+
+            const reservation = await this._reservationRepo.FindByIdAsync(reservationId);
+            
+            if (!reservation) {
+                this.logger.warn(`Reserva ${reservationId} não encontrada.`);
+                return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
+            }
+
+            if (reservation.status !== ReservationStatus.PENDING) {
+                this.logger.warn(`Tentativa de pagar reserva ${reservationId} com status ${reservation.status}.`);
+                return Result.Fail("A reserva não está pendente ou já expirou.");
+            }
+
+            reservation.status = ReservationStatus.CONFIRMED;
+
+            if (reservation.seat) {
+                reservation.seat.status = SeatStatus.SOLD; 
+                await this._seatRepo.UpdateAsync(reservation.seat);
+            }
+
+            const updatedReservation = await this._reservationRepo.UpdateAsync(reservation);
+
+            if (updatedReservation.isFailed || updatedReservation.value == null)
+                return Result.Fail(ConstantsMessagesReservation.ErrorUpdate);
+            
+            this.logger.log(`Pagamento confirmado. Reserva ${reservationId} efetivada.`);
+
+
+            const resValue = updatedReservation.value;
+            const response = new ReservationVO();
+            response.id = resValue.id;
+            response.userId = resValue.userId;
+            response.seatId = resValue.seatId;
+            response.status = resValue.status;
+            response.expiresAt = resValue.expiresAt;
+            response.movie = resValue.seat.session.movie;
+
+            return Result.Ok(response);
+
+        } catch (error) {
+            this.logger.error(`Erro fatal ao confirmar pagamento: ${error.message}`, error.stack);
+            return Result.Fail(ConstantsMessagesReservation.ErrorUpdate);
+        }
+    }
 }
