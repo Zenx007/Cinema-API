@@ -1,7 +1,7 @@
 import { Controller, Get, Res, Req, Post, Body, Query, Put, Delete } from "@nestjs/common";
 import { ApiTags, ApiOperation } from "@nestjs/swagger";
 import { Response } from "express";
-import { SessionVO, SessionSaveVO } from "../../Communication/ViewObjects/Session/SessionVO";
+import { SessionVO, SessionSaveVO, SessionUpdateVO } from "../../Communication/ViewObjects/Session/SessionVO";
 import { ISessionService } from "../../Core/ServicesInterface/ISessionService.interface";
 import { ConstantsMessagesSession } from "../../Helpers/ConstantsMessages/ConstantsMessages";
 import { List } from "../../Helpers/CustomObjects/List.Interface";
@@ -119,7 +119,7 @@ export class SessionController {
     async UpdateAsync(
         @Res() res: Response,
         @Req() req: Request,
-        @Body() model: SessionVO,
+        @Body() model: SessionUpdateVO,
     ) {
         const response = new ApiResponse<SessionVO>();
         try {

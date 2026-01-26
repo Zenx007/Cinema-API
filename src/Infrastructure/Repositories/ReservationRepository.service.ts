@@ -54,24 +54,6 @@ export class ReservationRepository extends IReservationRepository {
         }
     }
 
-    async DeleteAsync(id: string): Task<Result> {
-        try {
-            const reservation: Reservation | null = await this.FindByIdAsync(id);
-            if (!reservation)
-                return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
-
-            await this._reservationDbContext.delete(id);
-
-            this.logger.log(`Reserva ${id} foi deletada do banco.`);
-
-            return Result.Ok();
-        }
-        catch (error) {
-            this.logger.error(`Erro ao deletar reserva ${id}: ${error.message}`, error.stack);
-            return Result.Fail(ConstantsMessagesReservation.ErrorDelete);
-        }
-    }
-
     async FindByIdAsync(id: string): Task<Reservation | null> {
         try {
             const reservation: Reservation | null = await this._reservationDbContext.findOne({

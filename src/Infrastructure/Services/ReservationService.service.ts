@@ -151,29 +151,6 @@ export class ReservationService extends IReservationService {
         }
     }
 
-    async DeleteAsync(id: string): Task<Result> {
-        try {
-            const reservationDelete = await this._reservationRepo.FindByIdAsync(id);
-            if (reservationDelete == null) {
-                this.logger.warn(`Tentativa de deletar reserva inexistente: ${id}`);
-                return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
-            }
-
-            const response = await this._reservationRepo.DeleteAsync(id);
-
-            if (response.isFailed)
-                return Result.Fail(ConstantsMessagesReservation.ErrorDelete);
-
-            this.logger.log(`Reserva ${id} removida com sucesso.`);
-
-            return Result.Ok();
-        }
-        catch (error) {
-            this.logger.error(`Erro ao deletar reserva ${id}: ${error.message}`, error.stack);
-            return Result.Fail(ConstantsMessagesReservation.ErrorDelete);
-        }
-    }
-
     async GetById(id: string): Task<Result<ReservationVO>> {
         try {
             if (!id)

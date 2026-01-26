@@ -9,7 +9,6 @@ import { ReservationSaveVO, ReservationVO } from "../../Communication/ViewObject
 export abstract class IReservationService {
     abstract CreateAsync (model: ReservationSaveVO): Task<Result<ReservationVO>>;
     abstract UpdateAsync (model: ReservationVO): Task<Result<ReservationVO>>;
-    abstract DeleteAsync(id: string): Task<Result>;
     abstract GetById (id: string): Task<Result<ReservationVO>>;
     abstract GetAll (): Task<Result<List<ReservationVO>>>;
     abstract GetHistoryAsync(userId: string): Task<Result<List<ReservationVO>>>;

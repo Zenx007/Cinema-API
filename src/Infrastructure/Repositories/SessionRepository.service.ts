@@ -36,17 +36,10 @@ export class SessionRepository extends ISessionRepository {
 
     async UpdateAsync(model: Session): Task<Result<Session>> {
         try {
-            const session: Session | null = await this.FindByIdAsync(model.id);
-            if (session == null)
-                return Result.Fail(ConstantsMessagesSession.ErrorFindById);
-
-            session.movie = model.movie;
-            session.room = model.room;
-            session.price = model.price;
 
             this.logger.debug(`Atualizando sessão ${model.id}`);
 
-            const saved = await this._sessionDbContext.save(session);
+            const saved = await this._sessionDbContext.save(model);
 
             return Result.Ok(saved);
         }

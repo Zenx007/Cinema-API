@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { SessionSaveVO, SessionVO } from "../../Communication/ViewObjects/Session/SessionVO";
+import { SessionSaveVO, SessionUpdateVO, SessionVO } from "../../Communication/ViewObjects/Session/SessionVO";
 import { Seat, SeatStatus } from "../../Core/Entities/Seat/Seat.entity";
 import { ISessionRepository } from "../../Core/RepositoriesInterface/ISessionRepository.interface";
 import { ISessionService } from "../../Core/ServicesInterface/ISessionService.interface";
@@ -74,9 +74,9 @@ export class SessionService extends ISessionService {
             const response = new SessionVO();
             response.id = createdSession.id;
             response.movie = createdSession.movie;
-            response.roomId = createdSession.room;
+            response.room = createdSession.room;
             response.price = createdSession.price;
-            response.startTime = createdSession.startTime;
+            response.startTime = createdSession.startTime.substring(0, 5);;
 
             return Result.Ok(response);
         }
@@ -86,7 +86,7 @@ export class SessionService extends ISessionService {
         }
     }
 
-    async UpdateAsync(model: SessionVO): Task<Result<SessionVO>> {
+    async UpdateAsync(model: SessionUpdateVO): Task<Result<SessionVO>> {
         try {
             if (!model.id) return Result.Fail(ConstantsMessagesSession.ErrorNotFound);
 
@@ -96,14 +96,12 @@ export class SessionService extends ISessionService {
                 return Result.Fail(ConstantsMessagesSession.ErrorNotFound);
             }
 
-            const sessionToUpdate = new Session();
-            sessionToUpdate.id = model.id;
-            sessionToUpdate.movie = model.movie;
-            sessionToUpdate.room = model.roomId;
-            sessionToUpdate.price = model.price;
-            sessionToUpdate.startTime = model.startTime;
+            existingSession.movie = model.movie;
+            existingSession.room = model.room;
+            existingSession.price = model.price;
+            existingSession.startTime = model.startTime;
 
-            const updateResult = await this._sessionRepo.UpdateAsync(sessionToUpdate);
+            const updateResult = await this._sessionRepo.UpdateAsync(existingSession);
 
             if (updateResult.isFailed || updateResult.value == null)
                 return Result.Fail(ConstantsMessagesSession.ErrorPut);
@@ -114,9 +112,9 @@ export class SessionService extends ISessionService {
             const response = new SessionVO();
             response.id = updatedSession.id;
             response.movie = updatedSession.movie;
-            response.roomId = updatedSession.room;
+            response.room = updatedSession.room;
             response.price = updatedSession.price;
-            response.startTime = updatedSession.startTime;
+            response.startTime = updatedSession.startTime.substring(0, 5);;
 
             return Result.Ok(response);
         }
@@ -167,9 +165,9 @@ export class SessionService extends ISessionService {
             const response = new SessionVO();
             response.id = session.id;
             response.movie = session.movie;
-            response.roomId = session.room;
+            response.room = session.room;
             response.price = session.price;
-            response.startTime = session.startTime;
+            response.startTime = session.startTime.substring(0, 5);;
 
             this.logger.error(`Sessão ${id} buscada com sucesso.`);
 
@@ -193,9 +191,9 @@ export class SessionService extends ISessionService {
                 const vo = new SessionVO();
                 vo.id = session.id;
                 vo.movie = session.movie;
-                vo.roomId = session.room;
+                vo.room = session.room;
                 vo.price = session.price;
-                vo.startTime = session.startTime;
+                vo.startTime = session.startTime.substring(0, 5);;
 
                 return vo;
             });

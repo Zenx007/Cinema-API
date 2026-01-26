@@ -7,7 +7,6 @@ import { Module } from "@nestjs/common";
 export abstract class IReservationRepository {
     abstract InsertAsync(model: Reservation): Task<Result<Reservation>>;
     abstract UpdateAsync(model: Reservation): Task<Result<Reservation>>;
-    abstract DeleteAsync(id: string): Task<Result>;
     abstract FindByIdAsync(id: string): Task<Reservation | null>;
     abstract FindAllAsync(): Task<List<Reservation> | null>;
     abstract FindBySeatAsync(id: string): Task<Reservation | null>;

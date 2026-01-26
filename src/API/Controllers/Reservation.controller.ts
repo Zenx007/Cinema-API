@@ -114,39 +114,6 @@ export class ReservationController {
         }
     }
 
-    @ApiOperation({ summary: 'Delete - Cancela/Remove uma reserva' })
-    @Delete('Delete')
-    async DeleteAsync(
-        @Res() res: Response,
-        @Req() req: Request,
-        @Query('id') id: string,
-    ) {
-        const response = new ApiResponse<Result>();
-        try {
-            const result = await this._reservationService.DeleteAsync(id);
-
-            if (result.isFailed) {
-                response.object = null,
-                    response.message = result.errors[0],
-                    response.success = false;
-
-                return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
-            }
-
-            response.object = result,
-                response.success = true;
-
-            return StatusCode(res, StatusCodes.STATUS_200_OK, response);
-        }
-        catch (error) {
-            response.message = ConstantsMessagesReservation.ErrorDelete,
-                response.object = null,
-                response.success = false;
-
-            return StatusCode(res, StatusCodes.STATUS_400_BAD_REQUEST, response);
-        }
-    }
-
     @ApiOperation({ summary: 'History - Histórico de reservas do usuário' })
     @Get('History')
     @ApiQuery({ name: 'userId', required: true, type: String })

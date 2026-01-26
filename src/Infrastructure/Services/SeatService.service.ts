@@ -30,7 +30,7 @@ export class SeatService extends ISeatService {
             if (!sessionId)
                  return Result.Fail(ConstantsMessagesSeat.ErrorNotFound);
 
-            const session = await this._seatRepo.FindByIdAsync(sessionId);
+            const session = await this._sessionRepo.FindByIdAsync(sessionId);
             if (session == null ) {
                 this.logger.warn(`Tentativa de buscar assentos disponiveis em sessão inexistente: ${sessionId}`);
                 return Result.Fail(ConstantsMessagesSession.ErrorNotFound);
