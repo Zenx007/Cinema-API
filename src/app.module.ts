@@ -9,9 +9,24 @@ import { DatabaseModule } from './Infrastructure/Database/database.module';
 import { WinstonModule } from 'nest-winston';
 import { winstonConfig } from './Helpers/Logger/winston.config';
 import { ScheduleModule } from '@nestjs/schedule';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-redis-store';
+import { RabbitMQModule } from './Infrastructure/Messaging/RabbitMQ.module';
+
 
 @Module({
-  imports: [DatabaseModule, WinstonModule.forRoot(winstonConfig), ScheduleModule.forRoot()],
+  imports: [DatabaseModule,
+    WinstonModule.forRoot(winstonConfig),
+    ScheduleModule.forRoot(),
+    CacheModule.register({
+      isGlobal: true,        
+      store: redisStore,   
+      host: 'cinema_redis',  
+      port: 6379,
+      ttl: 5,               
+    }),
+  RabbitMQModule,
+],
   controllers: [...AddControllers],
   providers: [
     AppService,
@@ -28,4 +43,4 @@ import { ScheduleModule } from '@nestjs/schedule';
     ...RepositoriesStartup
   ]
 })
-export class AppModule {}
+export class AppModule { }

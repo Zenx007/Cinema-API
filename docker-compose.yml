@@ -10,16 +10,23 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=10000
-      
-      - DB_HOST=postgres_db 
+
+      - DB_HOST=postgres_db
       - DB_PORT=5432
       - DB_USER=admin
       - DB_PASSWORD=admin
       - DB_NAME=cinema_db
-      
-      
+
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     depends_on:
-      - postgres_db
+      postgres_db:
+        condition: service_started
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks:
       - cinema-network
 
@@ -32,7 +39,7 @@ services:
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: cinema_db
     ports:
-      - "5432:5432" 
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
@@ -47,11 +54,16 @@ services:
       - cinema-network
 
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:3.13-management
     container_name: cinema_rabbitmq
     ports:
       - "5672:5672"
-      - "15672:15672" 
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     networks:
       - cinema-network
 

@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { ReservationSaveVO, ReservationVO } from "../../Communication/ViewObjects/Reservation/ReservationVO";
 import { Reservation, ReservationStatus } from "../../Core/Entities/Reservation/Reservation.entity";
 import { IReservationRepository } from "../../Core/RepositoriesInterface/IReservationRepository.interface";
@@ -9,6 +9,7 @@ import { Result } from "../../Helpers/CustomObjects/Result";
 import { Task } from "../../Helpers/CustomObjects/Task.Interface";
 import { ISeatRepository } from "../../Core/RepositoriesInterface/ISeatRepository.interface";
 import { SeatStatus } from "../../Core/Entities/Seat/Seat.entity";
+import { ClientProxy } from "@nestjs/microservices";
 
 @Injectable()
 export class ReservationService extends IReservationService {
@@ -20,6 +21,9 @@ export class ReservationService extends IReservationService {
     constructor(
         private readonly reservationRepo: IReservationRepository,
         private readonly seatRepo: ISeatRepository,
+
+        @Inject('RABBITMQ_SERVICE') private readonly rabbitClient: ClientProxy,
+
     ) {
         super();
         this._reservationRepo = this.reservationRepo;
@@ -60,10 +64,26 @@ export class ReservationService extends IReservationService {
 
             if (savedResult.isFailed || savedResult.value == null) {
                 this.logger.error(`Falha ao persistir reserva para o assento ${model.seatId}`);
+
+                seat.status = SeatStatus.AVAILABLE;
+                await this._seatRepo.UpdateAsync(seat);
                 return Result.Fail(ConstantsMessagesReservation.ErrorCreate);
             }
 
             const createdReservation = savedResult.value;
+
+            try {
+                this.rabbitClient.emit('reservation_created', {
+                    id: createdReservation.id,
+                    userId: createdReservation.userId,
+                    seatId: createdReservation.seatId,
+                    timestamp: new Date(),
+                });
+                this.logger.log(`Evento 'reservation_created' enviado para fila.`);
+            } catch (e) {
+                this.logger.error(`Erro ao publicar mensagem: ${e.message}`);
+            }
+
 
             this.logger.log(`Reserva ${createdReservation.id} criada com sucesso.`);
 
@@ -85,7 +105,8 @@ export class ReservationService extends IReservationService {
 
     async UpdateAsync(model: ReservationVO): Task<Result<ReservationVO>> {
         try {
-            if (!model.id) return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
+            if (!model.id) 
+                return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
 
             this.logger.debug(`Atualizando reserva ${model.id} para status ${model.status}`);
 
@@ -113,6 +134,7 @@ export class ReservationService extends IReservationService {
             response.userId = updatedReservation.userId;
             response.seatId = updatedReservation.seatId;
             response.status = updatedReservation.status;
+            response.movie = existingReservation.seat.session.movie;
             if (updatedReservation.status === ReservationStatus.PENDING) {
                 response.expiresAt = updatedReservation.expiresAt;
             } else {
@@ -152,10 +174,12 @@ export class ReservationService extends IReservationService {
 
     async GetById(id: string): Task<Result<ReservationVO>> {
         try {
-            if (!id) return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
+            if (!id)
+                 return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
 
             const reservation = await this._reservationRepo.FindByIdAsync(id);
-            if (reservation == null) return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
+            if (reservation == null) 
+                return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
 
             const response = new ReservationVO();
             response.id = reservation.id;
@@ -180,7 +204,8 @@ export class ReservationService extends IReservationService {
     async GetAll(): Task<Result<List<ReservationVO>>> {
         try {
             const list = await this._reservationRepo.FindAllAsync();
-            if (list == null) return Result.Fail(ConstantsMessagesReservation.ErrorGetAll);
+            if (list == null)
+                 return Result.Fail(ConstantsMessagesReservation.ErrorGetAll);
 
             const responseList: ReservationVO[] = list.map(res => {
                 const vo = new ReservationVO();
@@ -269,6 +294,18 @@ export class ReservationService extends IReservationService {
 
             if (updatedReservation.isFailed || updatedReservation.value == null)
                 return Result.Fail(ConstantsMessagesReservation.ErrorUpdate);
+
+            try {
+                this.rabbitClient.emit('payment_confirmed', {
+                    reservationId: reservationId,
+                    status: 'CONFIRMED',
+                    timestamp: new Date(),
+                });
+                this.logger.log(`Evento 'payment_confirmed' enviado para fila.`);
+            } catch (e) {
+                this.logger.error(`Erro ao publicar mensagem: ${e.message}`);
+            }
+
 
             this.logger.log(`Pagamento confirmado. Reserva ${reservationId} efetivada.`);
 

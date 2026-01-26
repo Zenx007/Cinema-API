@@ -76,7 +76,7 @@ export class ReservationRepository extends IReservationRepository {
         try {
             const reservation: Reservation | null = await this._reservationDbContext.findOne({
                 where: { id: id },
-                relations: ['seat']
+                relations: ['seat', 'seat.session']
             });
             return reservation ?? null;
         }
@@ -89,7 +89,7 @@ export class ReservationRepository extends IReservationRepository {
     async FindAllAsync(): Task<List<Reservation> | null> {
         try {
             const list: List<Reservation> = await this._reservationDbContext.find({
-                relations: ['seat']
+                relations: ['seat', 'seat.session']
             });
             return list;
         }
