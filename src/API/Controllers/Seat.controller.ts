@@ -1,4 +1,4 @@
-import { Controller, Get, Res, Req, Query } from "@nestjs/common";
+import { Controller, Get, Res, Req, Query, UseInterceptors } from "@nestjs/common";
 import { ApiTags, ApiOperation } from "@nestjs/swagger";
 import { Response, Request } from "express";
 import { SeatVO } from "../../Communication/ViewObjects/Seat/SeatVO";
@@ -7,6 +7,7 @@ import { ConstantsMessagesSeat } from "../../Helpers/ConstantsMessages/Constants
 import { List } from "../../Helpers/CustomObjects/List.Interface";
 import { StatusCode, StatusCodes } from "../../Helpers/StatusCode/StatusCode";
 import { ApiResponse } from "../../Helpers/CustomObjects/ApiResponse.interface";
+import { CacheInterceptor, CacheTTL } from "@nestjs/cache-manager";
 
 @ApiTags('Seats') 
 @Controller("Seat")
@@ -17,6 +18,8 @@ export class SeatController {
 
     @ApiOperation({ summary: 'GetAvailable - Lista apenas assentos disponiveis de uma sessão' })
     @Get('GetAvailable')
+    @UseInterceptors(CacheInterceptor)
+    @CacheTTL(2)
     async GetAvailableAsync(
         @Res() res: Response,
         @Req() req: Request,

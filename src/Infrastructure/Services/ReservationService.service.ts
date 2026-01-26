@@ -113,7 +113,11 @@ export class ReservationService extends IReservationService {
             response.userId = updatedReservation.userId;
             response.seatId = updatedReservation.seatId;
             response.status = updatedReservation.status;
-            response.expiresAt = updatedReservation.expiresAt;
+            if (updatedReservation.status === ReservationStatus.PENDING) {
+                response.expiresAt = updatedReservation.expiresAt;
+            } else {
+                response.expiresAt = null;
+            }
 
             return Result.Ok(response);
         }
@@ -158,8 +162,12 @@ export class ReservationService extends IReservationService {
             response.userId = reservation.userId;
             response.seatId = reservation.seatId;
             response.status = reservation.status;
-            response.expiresAt = reservation.expiresAt;
             response.movie = reservation.seat.session.movie;
+            if (reservation.status === ReservationStatus.PENDING) {
+                response.expiresAt = reservation.expiresAt;
+            } else {
+                response.expiresAt = null;
+            }
 
             return Result.Ok(response);
         }
@@ -180,8 +188,13 @@ export class ReservationService extends IReservationService {
                 vo.userId = res.userId;
                 vo.seatId = res.seatId;
                 vo.status = res.status;
-                vo.expiresAt = res.expiresAt;
                 vo.movie = res.seat.session.movie;
+                if (res.status === ReservationStatus.PENDING) {
+                    vo.expiresAt = res.expiresAt;
+                } else {
+                    vo.expiresAt = null;
+                }
+
                 return vo;
             });
 
@@ -201,7 +214,7 @@ export class ReservationService extends IReservationService {
 
             const list = await this._reservationRepo.FindByUserIdAsync(userId);
 
-            if (list == null) 
+            if (list == null)
                 return Result.Fail(ConstantsMessagesReservation.ErrorGetAll);
 
             const responseList: ReservationVO[] = list.map(res => {
@@ -210,8 +223,13 @@ export class ReservationService extends IReservationService {
                 vo.userId = res.userId;
                 vo.seatId = res.seatId;
                 vo.status = res.status;
-                vo.expiresAt = res.expiresAt;
                 vo.movie = res.seat.session.movie;
+                if (res.status === ReservationStatus.PENDING) {
+                    vo.expiresAt = res.expiresAt;
+                } else {
+                    vo.expiresAt = null;
+                }
+
                 return vo;
             });
 
@@ -229,7 +247,7 @@ export class ReservationService extends IReservationService {
             this.logger.debug(`Iniciando confirmação de pagamento para reserva: ${reservationId}`);
 
             const reservation = await this._reservationRepo.FindByIdAsync(reservationId);
-            
+
             if (!reservation) {
                 this.logger.warn(`Reserva ${reservationId} não encontrada.`);
                 return Result.Fail(ConstantsMessagesReservation.ErrorNotFound);
@@ -243,7 +261,7 @@ export class ReservationService extends IReservationService {
             reservation.status = ReservationStatus.CONFIRMED;
 
             if (reservation.seat) {
-                reservation.seat.status = SeatStatus.SOLD; 
+                reservation.seat.status = SeatStatus.SOLD;
                 await this._seatRepo.UpdateAsync(reservation.seat);
             }
 
@@ -251,7 +269,7 @@ export class ReservationService extends IReservationService {
 
             if (updatedReservation.isFailed || updatedReservation.value == null)
                 return Result.Fail(ConstantsMessagesReservation.ErrorUpdate);
-            
+
             this.logger.log(`Pagamento confirmado. Reserva ${reservationId} efetivada.`);
 
 
@@ -261,7 +279,7 @@ export class ReservationService extends IReservationService {
             response.userId = resValue.userId;
             response.seatId = resValue.seatId;
             response.status = resValue.status;
-            response.expiresAt = resValue.expiresAt;
+            response.expiresAt = null;
             response.movie = resValue.seat.session.movie;
 
             return Result.Ok(response);
